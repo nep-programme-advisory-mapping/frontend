@@ -7,8 +7,8 @@ import { downloadProgrammeReportPdf } from '@/api/programmeReport.api'
 import { exportSheetsToPdf } from '@/utils/pdfExport'
 import { useEntriesStore } from '@/stores/entries.store'
 import { useTaxonomyStore } from '@/stores/taxonomy'
+import { useEducationLevelsStore } from '@/stores/educationLevels'
 import { useToast } from '@/utils/toast'
-import { EDUCATION_LEVELS } from '@/utils/format'
 
 const props = defineProps<{
   show: boolean
@@ -26,7 +26,10 @@ const reportContainerRef = ref<HTMLElement | null>(null)
 
 const entriesStore = useEntriesStore()
 const taxonomyStore = useTaxonomyStore()
+const educationLevelsStore = useEducationLevelsStore()
 const toast = useToast()
+
+educationLevelsStore.ensureLoaded()
 
 const displayEntry = computed(() => detailedEntry.value || props.entry)
 
@@ -255,7 +258,7 @@ function formatLocations(entry: any) {
                         </td>
                         <td class="p-2 border border-slate-200">
                           <template v-if="Array.isArray(act.levels) && act.levels.length">
-                            {{ act.levels.map((l: any) => EDUCATION_LEVELS[l] || l).join(', ') }}
+                            {{ act.levels.map((l: any) => educationLevelsStore.labelById[l] || l).join(', ') }}
                           </template>
                           <template v-else-if="Array.isArray(act.education_levels)">
                             {{ act.education_levels.join(', ') }}

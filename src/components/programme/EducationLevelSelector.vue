@@ -1,4 +1,7 @@
 <script setup lang="ts">
+import { onMounted, ref } from 'vue';
+import { refdataApi } from '@/api/refdata.api';
+
 const props = defineProps<{
   modelValue: number[];
 }>();
@@ -7,13 +10,19 @@ const emit = defineEmits<{
   (e: 'update:modelValue', value: number[]): void;
 }>();
 
-const educationLevels = [
-  { id: 1, name: "Pre-primary / ECCD" },
-  { id: 2, name: "Primary" },
-  { id: 3, name: "Lower secondary" },
-  { id: 4, name: "Upper secondary" },
-  { id: 5, name: "Higher education" }
-];
+// Ids come from the backend, not hardcoded here — the education_levels table's
+// row ids depend on seed order and can differ between environments.
+const educationLevels = ref<{ id: number; name: string }[]>([]);
+
+onMounted(async () => {
+  try {
+    const levels = await refdataApi.educationLevels();
+    educationLevels.value = levels.map((l) => ({ id: l.id, name: l.level_name }));
+  } catch {
+    // Leave the list empty on failure rather than falling back to guessed
+    // ids that may not exist in this environment's database.
+  }
+});
 
 const toggleLevel = (id: number) => {
   const current = (props.modelValue || []).map(Number);
