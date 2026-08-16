@@ -52,7 +52,7 @@ function onSubCategorySelect(e: Event) {
 
         <div class="space-y-3.5">
           <div class="flex flex-col gap-1">
-            <label class="text-xs font-bold text-slate-700">Category</label>
+            <label class="text-xs font-bold text-slate-700">Category <span class="text-red-500">*</span></label>
             <select v-model="store.promoteForm.categoryCode" class="w-full px-3 py-2.5 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-teal-500 text-slate-700 bg-white">
               <option v-for="c in taxonomy.categories" :key="c.code" :value="c.code">
                 {{ c.code }} · {{ c.label }}
@@ -73,11 +73,11 @@ function onSubCategorySelect(e: Event) {
 
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
             <div class="flex flex-col gap-1">
-              <label class="text-xs font-bold text-slate-700">Sub-category code</label>
+              <label class="text-xs font-bold text-slate-700">Sub-category code <span class="text-red-500">*</span></label>
               <input type="text" v-model="store.promoteForm.subcategoryCode" class="w-full px-3 py-2.5 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-teal-500 text-slate-700 bg-white" />
             </div>
             <div class="flex flex-col gap-1">
-              <label class="text-xs font-bold text-slate-700">Sub-category label</label>
+              <label class="text-xs font-bold text-slate-700">Sub-category label <span class="text-red-500">*</span></label>
               <input type="text" v-model="store.promoteForm.subcategoryLabel" class="w-full px-3 py-2.5 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-teal-500 text-slate-700 bg-white" />
             </div>
           </div>

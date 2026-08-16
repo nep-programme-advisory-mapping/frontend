@@ -1,5 +1,5 @@
 export { formatRelativeTime } from './date'
-export { EDUCATION_LEVELS, INCLUSION_GROUPS } from '@/constants/map'
+export { INCLUSION_GROUPS } from '@/constants/map'
 export { BUDGET_BANDS } from '@/constants/programme'
 
 export function formatBudget(band: string | null | undefined): string {

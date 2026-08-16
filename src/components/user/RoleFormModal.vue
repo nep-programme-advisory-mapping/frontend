@@ -103,8 +103,8 @@ function handleSubmit() {
 
       <form @submit.prevent="handleSubmit" novalidate class="flex flex-col gap-4">
         <div>
-          <label for="role-display-name" class="flex items-center gap-1.5 text-[12.5px] font-semibold text-[var(--ink-700)] mb-1.5">
-            Display Name
+          <label for="role-display-name" class="flex items-center gap-1 text-[12.5px] font-semibold text-[var(--ink-700)] mb-1.5">
+            Display Name <span class="text-red-500">*</span>
           </label>
           <input
             id="role-display-name"
@@ -121,8 +121,8 @@ function handleSubmit() {
         </div>
 
         <div>
-          <label for="role-name" class="flex items-center gap-1.5 text-[12.5px] font-semibold text-[var(--ink-700)] mb-1.5">
-            Machine Name
+          <label for="role-name" class="flex items-center gap-1 text-[12.5px] font-semibold text-[var(--ink-700)] mb-1.5">
+            Machine Name <span class="text-red-500">*</span>
           </label>
           <input
             id="role-name"

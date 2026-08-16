@@ -135,8 +135,10 @@ function buildActivitiesPayload(activitiesData: any, activitiesStore: any, secti
       activitiesData?.educationLevels?.[code] ||
       section2Data?.educationLevels?.[code] || []
     ) as any[]
+    // Note: no upper bound here — education_level_ids are real DB ids whose
+    // range depends on seed order (varies by environment), not a fixed 1-5 set.
     const cleanLevels = Array.from(new Set(
-      rawLevels.map((v: any) => parseInt(String(v), 10)).filter((n: number) => !isNaN(n) && n >= 1 && n <= 5)
+      rawLevels.map((v: any) => parseInt(String(v), 10)).filter((n: number) => !isNaN(n) && n >= 1)
     ))
     const inc = activitiesData?.inclusions?.[code] || activitiesStore.inclusions?.[code] || section2Data?.inclusions?.[code]
     const otherVal = activitiesStore.otherText?.[code] || activitiesData?.otherText?.[code] || section2Data?.otherText?.[code]

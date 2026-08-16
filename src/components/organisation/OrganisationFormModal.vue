@@ -197,28 +197,28 @@ function handleSubmit() {
         </div>
 
         <div class="form-field">
-          <label for="org-name">Organisation Name</label>
+          <label for="org-name">Organisation Name <span class="text-red-500">*</span></label>
           <input id="org-name" v-model="name" type="text" placeholder="e.g. Green Future Foundation" :class="{ 'has-error': clientErrors.name }" autocomplete="off" />
           <p v-if="clientErrors.name" class="field-error"><BaseIcon name="alert" :size="11" />{{ clientErrors.name }}</p>
         </div>
 
         <!-- Contact Name -->
         <div class="form-field">
-          <label for="org-contact">Contact Name</label>
+          <label for="org-contact">Contact Name <span class="text-red-500">*</span></label>
           <input id="org-contact" v-model="contactName" type="text" placeholder="e.g. Jane Smith" :class="{ 'has-error': clientErrors.contact_name }" autocomplete="name" />
           <p v-if="clientErrors.contact_name" class="field-error"><BaseIcon name="alert" :size="11" />{{ clientErrors.contact_name }}</p>
         </div>
 
         <!-- Email -->
         <div class="form-field">
-          <label for="org-email">Email Address</label>
+          <label for="org-email">Email Address <span class="text-red-500">*</span></label>
           <input id="org-email" v-model="email" type="email" placeholder="e.g. contact@org.com" :class="{ 'has-error': clientErrors.email }" autocomplete="email" />
           <p v-if="clientErrors.email" class="field-error"><BaseIcon name="alert" :size="11" />{{ clientErrors.email }}</p>
         </div>
 
         <!-- Member Since -->
         <div class="form-field">
-          <label for="org-since">Member Since (Year)</label>
+          <label for="org-since">Member Since (Year) <span class="text-red-500">*</span></label>
           <input id="org-since" v-model.number="memberSince" type="number" placeholder="e.g. 2020" :class="{ 'has-error': clientErrors.member_since }" />
           <p v-if="clientErrors.member_since" class="field-error"><BaseIcon name="alert" :size="11" />{{ clientErrors.member_since }}</p>
         </div>

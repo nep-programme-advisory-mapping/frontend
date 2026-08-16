@@ -1,17 +1,29 @@
 <script setup lang="ts">
+import { ref } from 'vue'
 import { useTaxonomyAdminStore } from '@/stores/taxonomyAdmin'
 
 const store = useTaxonomyAdminStore()
 const taxonomy = store.taxonomy
+
+const filterOpen = ref(false)
+
+const filterOptions: { value: 'all' | 'active' | 'deprecated'; label: string }[] = [
+  { value: 'all', label: 'All Activities' },
+  { value: 'active', label: 'Active Only' },
+  { value: 'deprecated', label: 'Deprecated Only' },
+]
+
+const currentFilterLabel = () =>
+  filterOptions.find(o => o.value === store.statusFilter)?.label ?? 'All Activities'
 </script>
 
 <template>
   <div class="space-y-4">
     <!-- Search & Filter Bar -->
-    <div class="flex flex-col sm:flex-row gap-3 bg-white p-4 rounded-2xl border border-slate-200/80 shadow-xs">
+    <div class="flex flex-col sm:flex-row gap-2.5 bg-white p-3.5 rounded-2xl border border-slate-200/80 shadow-xs">
       <!-- Search input -->
-      <div class="relative flex-grow">
-        <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-slate-400">
+      <div class="relative flex-1 min-w-0">
+        <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-slate-400 pointer-events-none">
           <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
             <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
           </svg>
@@ -24,15 +36,42 @@ const taxonomy = store.taxonomy
         />
       </div>
 
-      <div class="sm:w-48">
-        <select
-          v-model="store.statusFilter"
-          class="w-full px-3 py-2 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-teal-500 text-slate-700 bg-white"
+      <div class="w-full sm:w-44 shrink-0 relative">
+        <!-- Custom dropdown trigger -->
+        <button
+          type="button"
+          @click="filterOpen = !filterOpen"
+          class="w-full flex items-center justify-between px-3 py-2 border border-slate-200 rounded-xl text-sm text-slate-700 bg-white cursor-pointer hover:border-teal-400 transition-colors focus:outline-none focus:ring-2 focus:ring-teal-500"
+          :class="filterOpen ? 'border-teal-500 ring-2 ring-teal-500/20' : ''"
         >
-          <option value="all">All Activities</option>
-          <option value="active">Active Only</option>
-          <option value="deprecated">Deprecated Only</option>
-        </select>
+          <span>{{ currentFilterLabel() }}</span>
+          <svg class="w-4 h-4 text-slate-400 transition-transform duration-150 shrink-0 ml-1" :class="filterOpen ? 'rotate-180' : ''" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7" />
+          </svg>
+        </button>
+
+        <!-- Dropdown panel -->
+        <div
+          v-if="filterOpen"
+          class="absolute left-0 right-0 top-full mt-1 z-30 bg-white border border-slate-200 rounded-xl shadow-lg overflow-hidden"
+        >
+          <!-- Click-outside overlay -->
+          <div class="fixed inset-0 z-20" @click="filterOpen = false" />
+          <div class="relative z-30">
+            <button
+              v-for="opt in filterOptions"
+              :key="opt.value"
+              type="button"
+              class="w-full text-left px-3.5 py-2.5 text-sm transition-colors cursor-pointer"
+              :class="store.statusFilter === opt.value
+                ? 'bg-teal-600 text-white font-semibold'
+                : 'text-slate-700 hover:bg-slate-50'"
+              @click="store.statusFilter = opt.value; filterOpen = false"
+            >
+              {{ opt.label }}
+            </button>
+          </div>
+        </div>
       </div>
     </div>
 

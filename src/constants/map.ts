@@ -1,13 +1,7 @@
-/**
- * Maps education level API IDs to their display labels.
- * Used by the "Education level" filter dropdown in MapFilterBar.
- */
-export const EDUCATION_LEVELS: Record<string, string> = {
-  '1': 'Primary',
-  '2': 'Lower Secondary',
-  '3': 'Upper Secondary',
-  '4': 'Tertiary',
-}
+// Education-level id -> label used to live here as a hardcoded map, but row
+// ids depend on seed order and differ per environment. Use
+// `useEducationLevelsStore` (stores/educationLevels.ts) instead, which fetches
+// the real ids from the backend.
 
 /**
  * Maps inclusion group keys to their display labels.

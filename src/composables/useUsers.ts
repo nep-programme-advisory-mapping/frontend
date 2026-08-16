@@ -1,4 +1,4 @@
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
 import { userService } from '@/services/user.service'
 import type { OrganisationOption } from '@/types/user'
 import { useToast } from '@/utils/toast'
@@ -23,6 +23,28 @@ export function useUsers() {
   const lastPage = ref(1)
   const totalItems = ref(0)
   const perPage = ref(50)
+
+  // Client-side fallback filter
+  const filteredUsers = computed(() => {
+    let list = users.value
+    const q = searchQuery.value.trim().toLowerCase()
+    if (q) {
+      list = list.filter((u) => {
+        const name = (u.name ?? '').toLowerCase()
+        const email = (u.email ?? '').toLowerCase()
+        const org = (u.organisation?.name ?? '').toLowerCase()
+        const role = (u.role ?? '').toLowerCase()
+        return name.includes(q) || email.includes(q) || org.includes(q) || role.includes(q)
+      })
+    }
+    if (roleFilter.value) {
+      list = list.filter((u) => u.role === roleFilter.value || u.roles?.some(r => r.name === roleFilter.value))
+    }
+    if (statusFilter.value) {
+      list = list.filter((u) => u.status === statusFilter.value)
+    }
+    return list
+  })
 
   // Validation/Error States
   const fieldErrors = ref<Record<string, string[]>>({})
@@ -50,43 +72,32 @@ export function useUsers() {
     return _fetchOrgsPromise
   }
 
-  let _fetchUsersPromise: Promise<void> | null = null
-  let _fetchUsersPage = 1
-
   /** Fetch the paginated and filtered list of users from backend. */
   async function fetchUsers(page = currentPage.value): Promise<void> {
-    if (_fetchUsersPromise && _fetchUsersPage === page) return _fetchUsersPromise
-    _fetchUsersPage = page
-    _fetchUsersPromise = (async () => {
-      isLoading.value = true
-      clearErrors()
-      try {
-        const res = await userService.getUsers(page, searchQuery.value, {
-          role: roleFilter.value || undefined,
-          status: statusFilter.value || undefined,
-          per_page: perPage.value,
-        })
-        const payload = res.data
+    isLoading.value = true
+    clearErrors()
+    try {
+      const res = await userService.getUsers(page, searchQuery.value, {
+        role: roleFilter.value || undefined,
+        status: statusFilter.value || undefined,
+        per_page: perPage.value,
+      })
+      const payload = res.data
 
-        users.value = payload.data ?? []
-        currentPage.value = payload.current_page ?? 1
-        lastPage.value = payload.last_page ?? 1
-        totalItems.value = payload.total ?? 0
-        perPage.value = payload.per_page ?? 50
-      } catch (err: any) {
-        if (err.response?.status === 403) {
-          toast.error('Access denied. Admin only.')
-        } else {
-          toast.error('Failed to load users. Please try again.')
-        }
-      } finally {
-        isLoading.value = false
-        if (_fetchUsersPage === page) {
-          _fetchUsersPromise = null
-        }
+      users.value = payload.data ?? []
+      currentPage.value = payload.current_page ?? 1
+      lastPage.value = payload.last_page ?? 1
+      totalItems.value = payload.total ?? 0
+      perPage.value = payload.per_page ?? 50
+    } catch (err: any) {
+      if (err.response?.status === 403) {
+        toast.error('Access denied. Admin only.')
+      } else {
+        toast.error('Failed to load users. Please try again.')
       }
-    })()
-    return _fetchUsersPromise
+    } finally {
+      isLoading.value = false
+    }
   }
 
   /** Create a new user. Returns true on success. */
@@ -215,6 +226,7 @@ export function useUsers() {
 
   return {
     users,
+    filteredUsers,
     organisations,
     isLoading,
     isSaving,
