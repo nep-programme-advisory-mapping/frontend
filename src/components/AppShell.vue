@@ -138,8 +138,8 @@ function logout() {
 
     <!-- Sidebar -->
     <aside :class="[
-      'bg-teal-900 text-white flex flex-col shrink-0 z-30 transition-transform duration-300 ease-in-out lg:translate-x-0 lg:sticky lg:top-0 lg:h-screen lg:w-64 lg:flex',
-      isSidebarOpen ? 'translate-x-0 fixed inset-y-0 left-0 w-64' : '-translate-x-full fixed inset-y-0 left-0 w-64 lg:relative lg:translate-x-0'
+      'bg-teal-900 text-white flex flex-col shrink-0 z-30 transition-transform duration-300 ease-in-out lg:fixed lg:inset-y-0 lg:left-0 lg:w-64 lg:flex lg:translate-x-0',
+      isSidebarOpen ? 'translate-x-0 fixed inset-y-0 left-0 w-64' : '-translate-x-full fixed inset-y-0 left-0 w-64'
     ]">
       <div class="flex items-center gap-2.5 px-4 py-4.5 shrink-0 min-w-0">
         <img :src="nepLogo" alt="NEP Logo" class="h-10 w-auto max-w-[44px] object-contain shrink-0" />
@@ -222,7 +222,7 @@ function logout() {
     </aside>
 
     <!-- Main Content -->
-    <main class="flex-1 min-w-0 flex flex-col">
+    <main class="flex-1 min-w-0 flex flex-col lg:pl-64">
       <header class="h-16 bg-white border-b border-gray-200 flex items-center px-4 sm:px-6 gap-3 sm:gap-4 sticky top-[57px] lg:top-0 z-10">
         <div class="flex items-center gap-1 text-sm text-gray-500 w-full min-w-0">
           <slot name="header" />
