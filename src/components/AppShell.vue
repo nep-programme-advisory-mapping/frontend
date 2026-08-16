@@ -115,18 +115,21 @@ function logout() {
   <div class="flex min-h-screen flex-col lg:flex-row">
     <!-- Mobile Top Bar Header -->
     <div
-      class="lg:hidden flex items-center justify-between bg-teal-900 text-white px-5 py-3.5 sticky top-0 z-20 border-b border-white/10 shrink-0">
+      class="lg:hidden flex items-center justify-between bg-teal-900 text-white px-4 sm:px-5 py-3.5 sticky top-0 z-20 border-b border-white/10 shrink-0">
       <div class="flex items-center gap-2.5 min-w-0">
         <img :src="nepLogo" alt="NEP Logo" class="h-8 w-auto max-w-[36px] object-contain shrink-0" />
         <div class="leading-snug min-w-0">
           <b class="font-lexend text-xs font-bold block text-white truncate">{{ portalTitle }}</b>
-          <span class="text-[9px] text-white/50 block">Programme Mapping &amp; Advisory</span>
+          <span class="text-[9px] text-white/50 block truncate">Programme Mapping &amp; Advisory</span>
         </div>
       </div>
-      <button type="button" @click="isSidebarOpen = !isSidebarOpen"
-        class="text-white hover:text-white/80 transition-colors p-1" aria-label="Toggle navigation menu">
-        <BaseIcon :name="isSidebarOpen ? 'x' : 'list'" size="22" />
-      </button>
+      <div class="flex items-center gap-1.5 shrink-0">
+        <NotificationBell v-if="auth.isAuthenticated" dark class="shrink-0" />
+        <button type="button" @click="isSidebarOpen = !isSidebarOpen"
+          class="text-white hover:text-white/80 transition-colors p-1.5 shrink-0 cursor-pointer rounded-lg hover:bg-white/10" aria-label="Toggle navigation menu">
+          <BaseIcon :name="isSidebarOpen ? 'x' : 'list'" size="22" />
+        </button>
+      </div>
     </div>
 
     <!-- Backdrop Overlay for Mobile Drawer -->
@@ -220,11 +223,11 @@ function logout() {
 
     <!-- Main Content -->
     <main class="flex-1 min-w-0 flex flex-col">
-      <header class="h-16 bg-white border-b border-gray-200 flex items-center px-6 gap-4 sticky top-14 lg:top-0 z-10">
-        <div class="flex items-center gap-1 text-sm text-gray-500 w-full">
+      <header class="h-16 bg-white border-b border-gray-200 flex items-center px-4 sm:px-6 gap-3 sm:gap-4 sticky top-[57px] lg:top-0 z-10">
+        <div class="flex items-center gap-1 text-sm text-gray-500 w-full min-w-0">
           <slot name="header" />
         </div>
-        <NotificationBell v-if="auth.isAuthenticated" />
+        <NotificationBell v-if="auth.isAuthenticated" class="shrink-0 hidden lg:block" />
       </header>
 
       <!-- Page Content -->

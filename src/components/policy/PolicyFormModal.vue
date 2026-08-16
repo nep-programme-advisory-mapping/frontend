@@ -74,7 +74,7 @@ function submit() {
         </h3>
 
         <div class="mb-4">
-          <label class="block text-[12.5px] font-semibold text-[var(--ink-700)] mb-1.5">Title</label>
+          <label class="block text-[12.5px] font-semibold text-[var(--ink-700)] mb-1.5">Title <span class="text-red-500">*</span></label>
           <input type="text" v-model="form.title"
             class="w-full border border-[var(--line)] rounded-[8px] px-3 py-2.5 text-[13.3px] text-[var(--ink-900)] bg-white focus:outline-none focus:border-[var(--teal-600)] focus:ring-3 focus:ring-[var(--teal-100)]"
             :class="{ '!border-[var(--red-600)]': errors.title }" />
@@ -84,7 +84,7 @@ function submit() {
         </div>
 
         <div class="mb-4">
-          <label class="block text-[12.5px] font-semibold text-[var(--ink-700)] mb-1.5">Issuing authority</label>
+          <label class="block text-[12.5px] font-semibold text-[var(--ink-700)] mb-1.5">Issuing authority <span class="text-red-500">*</span></label>
           <input type="text" v-model="form.authority"
             class="w-full border border-[var(--line)] rounded-[8px] px-3 py-2.5 text-[13.3px] text-[var(--ink-900)] bg-white focus:outline-none focus:border-[var(--teal-600)] focus:ring-3 focus:ring-[var(--teal-100)]"
             :class="{ '!border-[var(--red-600)]': errors.authority }" />
@@ -95,7 +95,7 @@ function submit() {
 
         <div class="grid grid-cols-2 gap-4">
           <div class="mb-4">
-            <label class="block text-[12.5px] font-semibold text-[var(--ink-700)] mb-1.5">Version</label>
+            <label class="block text-[12.5px] font-semibold text-[var(--ink-700)] mb-1.5">Version <span class="text-red-500">*</span></label>
             <input type="text" v-model="form.version" placeholder="e.g. 1.0"
               class="w-full border border-[var(--line)] rounded-[8px] px-3 py-2.5 text-[13.3px] text-[var(--ink-900)] bg-white focus:outline-none focus:border-[var(--teal-600)] focus:ring-3 focus:ring-[var(--teal-100)]"
               :class="{ '!border-[var(--red-600)]': errors.version }" />
@@ -104,7 +104,7 @@ function submit() {
             </div>
           </div>
           <div class="mb-4">
-            <label class="block text-[12.5px] font-semibold text-[var(--ink-700)] mb-1.5">Date</label>
+            <label class="block text-[12.5px] font-semibold text-[var(--ink-700)] mb-1.5">Date <span class="text-red-500">*</span></label>
             <input type="date" v-model="form.date"
               class="w-full border border-[var(--line)] rounded-[8px] px-3 py-2.5 text-[13.3px] text-[var(--ink-900)] bg-white focus:outline-none focus:border-[var(--teal-600)] focus:ring-3 focus:ring-[var(--teal-100)]"
               :class="{ '!border-[var(--red-600)]': errors.date }" />

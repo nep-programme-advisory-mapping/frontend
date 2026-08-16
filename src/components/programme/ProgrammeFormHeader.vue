@@ -12,20 +12,17 @@ const emit = defineEmits<{
   (e: 'save-and-exit'): void
 }>()
 
-const autosaveStatusLabel = computed(() => {
-  switch (store.autosaveStatus) {
-    case 'saving': return 'Auto-saving…'
-    case 'saved': return 'Auto-saved'
-    case 'error': return 'Auto-save failed — retrying automatically'
-    default: return ''
+const statusInfo = computed(() => {
+  if (store.isSaving || store.autosaveStatus === 'saving') {
+    return { text: 'Saving…', class: 'text-gray-400' }
   }
-})
-const autosaveStatusClass = computed(() => {
-  switch (store.autosaveStatus) {
-    case 'saved': return 'text-green-600'
-    case 'error': return 'text-red-600'
-    default: return 'text-gray-400'
+  if (store.autosaveStatus === 'error') {
+    return { text: 'Auto-save retry pending', class: 'text-amber-600' }
   }
+  if (store.autosaveStatus === 'saved' || store.saveStatus === 'saved') {
+    return { text: 'Saved', class: 'text-green-600' }
+  }
+  return { text: 'Not yet saved', class: 'text-gray-400' }
 })
 </script>
 
@@ -39,13 +36,9 @@ const autosaveStatusClass = computed(() => {
       <p class="text-sm text-gray-500 mt-0.5 flex flex-wrap items-center gap-x-1.5 gap-y-0.5">
         <span>Section {{ store.currentStep }} of {{ store.steps.length }}</span>
         <span>·</span>
-        <span :class="store.saveStatus === 'saved' ? 'text-green-600' : 'text-gray-400'">
-          {{ store.saveLabel }}
+        <span :class="statusInfo.class">
+          {{ statusInfo.text }}
         </span>
-        <template v-if="store.autosaveEnabled && autosaveStatusLabel">
-          <span>·</span>
-          <span :class="autosaveStatusClass">{{ autosaveStatusLabel }}</span>
-        </template>
       </p>
       <label class="mt-1.5 inline-flex items-center gap-1.5 text-xs font-medium text-gray-600 select-none cursor-pointer">
         <input

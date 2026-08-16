@@ -61,7 +61,7 @@ function onSubCategorySelect(e: Event) {
         <div class="space-y-3.5">
           <!-- Category -->
           <div class="flex flex-col gap-1">
-            <label class="text-xs font-bold text-slate-700">Category</label>
+            <label class="text-xs font-bold text-slate-700">Category <span class="text-red-500">*</span></label>
             <select v-model="store.addForm.categoryCode" class="w-full px-3 py-2.5 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-teal-500 text-slate-700 bg-white">
               <option v-for="c in taxonomy.categories" :key="c.code" :value="c.code">
                 {{ c.code }} · {{ c.label }}
@@ -84,11 +84,11 @@ function onSubCategorySelect(e: Event) {
           <!-- Sub-category Code & Label inputs -->
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
             <div class="flex flex-col gap-1">
-              <label class="text-xs font-bold text-slate-700">Sub-category code</label>
+              <label class="text-xs font-bold text-slate-700">Sub-category code <span class="text-red-500">*</span></label>
               <input type="text" v-model="store.addForm.subcategoryCode" placeholder="e.g. B3.8" class="w-full px-3 py-2.5 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-teal-500 placeholder-slate-400 text-slate-700 bg-white" />
             </div>
             <div class="flex flex-col gap-1">
-              <label class="text-xs font-bold text-slate-700">Sub-category label</label>
+              <label class="text-xs font-bold text-slate-700">Sub-category label <span class="text-red-500">*</span></label>
               <input type="text" v-model="store.addForm.subcategoryLabel" placeholder="e.g. Financial support" class="w-full px-3 py-2.5 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-teal-500 placeholder-slate-400 text-slate-700 bg-white" />
             </div>
           </div>
@@ -96,7 +96,7 @@ function onSubCategorySelect(e: Event) {
           <!-- Item label & Predicted Code Preview -->
           <div class="flex flex-col gap-1">
             <div class="flex items-center justify-between">
-              <label class="text-xs font-bold text-slate-700">Item label</label>
+              <label class="text-xs font-bold text-slate-700">Item label <span class="text-red-500">*</span></label>
               <span v-if="predictedItemCode" class="text-[11px] font-semibold text-teal-700 bg-teal-50 px-2 py-0.5 rounded-md border border-teal-200/60">
                 Generated Code: {{ predictedItemCode }}
               </span>

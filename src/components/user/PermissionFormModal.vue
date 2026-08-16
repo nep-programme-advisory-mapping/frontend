@@ -103,8 +103,8 @@ function handleSubmit() {
 
       <form @submit.prevent="handleSubmit" novalidate class="flex flex-col gap-4">
         <div>
-          <label for="perm-display-name" class="flex items-center gap-1.5 text-[12.5px] font-semibold text-[var(--ink-700)] mb-1.5">
-            Display Name
+          <label for="perm-display-name" class="flex items-center gap-1 text-[12.5px] font-semibold text-[var(--ink-700)] mb-1.5">
+            Display Name <span class="text-red-500">*</span>
           </label>
           <input
             id="perm-display-name"
@@ -120,8 +120,8 @@ function handleSubmit() {
         </div>
 
         <div>
-          <label for="perm-name" class="flex items-center gap-1.5 text-[12.5px] font-semibold text-[var(--ink-700)] mb-1.5">
-            Permission Key
+          <label for="perm-name" class="flex items-center gap-1 text-[12.5px] font-semibold text-[var(--ink-700)] mb-1.5">
+            Permission Key <span class="text-red-500">*</span>
           </label>
           <input
             id="perm-name"
@@ -139,8 +139,8 @@ function handleSubmit() {
         </div>
 
         <div>
-          <label for="perm-group" class="flex items-center gap-1.5 text-[12.5px] font-semibold text-[var(--ink-700)] mb-1.5">
-            Module / Group
+          <label for="perm-group" class="flex items-center gap-1 text-[12.5px] font-semibold text-[var(--ink-700)] mb-1.5">
+            Module / Group <span class="text-red-500">*</span>
           </label>
           <input
             id="perm-group"

@@ -100,7 +100,7 @@ function close() {
         <div v-if="errors.general" class="alert alert-error">{{ errors.general }}</div>
 
         <div class="field">
-          <label for="current-password">Current password</label>
+          <label for="current-password">Current password <span class="text-red-500">*</span></label>
           <input
             :type="showPasswords ? 'text' : 'password'"
             id="current-password"
@@ -114,7 +114,7 @@ function close() {
         </div>
 
         <div class="field">
-          <label for="new-password">New password</label>
+          <label for="new-password">New password <span class="text-red-500">*</span></label>
           <input
             :type="showPasswords ? 'text' : 'password'"
             id="new-password"
@@ -128,7 +128,7 @@ function close() {
         </div>
 
         <div class="field">
-          <label for="confirm-password">Confirm new password</label>
+          <label for="confirm-password">Confirm new password <span class="text-red-500">*</span></label>
           <input
             :type="showPasswords ? 'text' : 'password'"
             id="confirm-password"

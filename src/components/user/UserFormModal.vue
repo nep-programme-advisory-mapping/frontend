@@ -203,8 +203,8 @@ function handleSubmit() {
 
         <!-- Full Name -->
         <div>
-          <label for="um-name" class="flex items-center gap-1.5 text-[12.5px] font-semibold text-[var(--ink-700)] mb-1.5">
-            Full Name
+          <label for="um-name" class="flex items-center gap-1 text-[12.5px] font-semibold text-[var(--ink-700)] mb-1.5">
+            Full Name <span class="text-red-500">*</span>
           </label>
           <input
             id="um-name"
@@ -222,8 +222,8 @@ function handleSubmit() {
 
         <!-- Email -->
         <div>
-          <label for="um-email" class="flex items-center gap-1.5 text-[12.5px] font-semibold text-[var(--ink-700)] mb-1.5">
-            Email Address
+          <label for="um-email" class="flex items-center gap-1 text-[12.5px] font-semibold text-[var(--ink-700)] mb-1.5">
+            Email Address <span class="text-red-500">*</span>
           </label>
           <input
             id="um-email"
@@ -242,7 +242,7 @@ function handleSubmit() {
         <!-- Password (create only) -->
         <Transition name="slide">
           <div v-if="!isEditMode">
-            <label for="um-password" class="flex items-center gap-1.5 text-[12.5px] font-semibold text-[var(--ink-700)] mb-1.5">
+            <label for="um-password" class="flex items-center gap-1 text-[12.5px] font-semibold text-[var(--ink-700)] mb-1.5">
               Password
             </label>
             <div class="relative">
@@ -279,8 +279,8 @@ function handleSubmit() {
 
         <!-- Role picker (visual cards) -->
         <div>
-          <label class="flex items-center gap-1.5 text-[12.5px] font-semibold text-[var(--ink-700)] mb-2">
-            Role
+          <label class="flex items-center gap-1 text-[12.5px] font-semibold text-[var(--ink-700)] mb-2">
+            Role <span class="text-red-500">*</span>
           </label>
           <div class="grid gap-2">
             <button
@@ -328,8 +328,8 @@ function handleSubmit() {
         <!-- Status (edit only) -->
         <Transition name="slide">
           <div v-if="isEditMode">
-            <label for="um-status" class="flex items-center gap-1.5 text-[12.5px] font-semibold text-[var(--ink-700)] mb-1.5">
-              Status
+            <label for="um-status" class="flex items-center gap-1 text-[12.5px] font-semibold text-[var(--ink-700)] mb-1.5">
+              Status <span class="text-red-500">*</span>
             </label>
             <div class="relative">
               <select
@@ -356,6 +356,7 @@ function handleSubmit() {
           <div v-if="showOrganisationField">
             <label for="um-organisation" class="flex items-center gap-1.5 text-[12.5px] font-semibold text-[var(--ink-700)] mb-1.5">
               Organisation
+              <span v-if="organisationRequired" class="text-red-500">*</span>
               <span class="text-[10px] font-bold px-1.5 py-0.5 rounded bg-teal-100 text-teal-700 uppercase tracking-wider">
                 {{ organisationRequired ? 'Required' : 'Optional' }}
               </span>
