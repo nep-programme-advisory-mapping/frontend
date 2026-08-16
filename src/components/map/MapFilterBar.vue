@@ -1,11 +1,18 @@
 <script setup lang="ts">
+import { onMounted } from 'vue'
 import { useMapStore } from '@/stores/map'
 import { useTaxonomyStore } from '@/stores/taxonomy'
-import { EDUCATION_LEVELS, INCLUSION_GROUPS } from '@/constants/map'
+import { useEducationLevelsStore } from '@/stores/educationLevels'
+import { INCLUSION_GROUPS } from '@/constants/map'
 import FilterSelect from './FilterSelect.vue'
 
 const mapStore = useMapStore()
 const taxonomyStore = useTaxonomyStore()
+const educationLevelsStore = useEducationLevelsStore()
+
+onMounted(() => {
+  educationLevelsStore.ensureLoaded()
+})
 </script>
 
 <template>
@@ -18,7 +25,7 @@ const taxonomyStore = useTaxonomyStore()
 
       <FilterSelect v-model="mapStore.filters.level">
         <option value="">Education level — any</option>
-        <option v-for="(label, key) in EDUCATION_LEVELS" :key="key" :value="key">{{ label }}</option>
+        <option v-for="l in educationLevelsStore.levels" :key="l.id" :value="String(l.id)">{{ l.level_name }}</option>
       </FilterSelect>
 
       <FilterSelect v-model="mapStore.filters.inclusion">

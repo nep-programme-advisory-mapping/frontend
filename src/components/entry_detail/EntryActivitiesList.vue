@@ -1,6 +1,7 @@
 <script setup lang="ts">
-import { ref, computed } from 'vue'
-import { EDUCATION_LEVELS, INCLUSION_GROUPS } from '@/utils/format'
+import { ref, computed, onMounted } from 'vue'
+import { INCLUSION_GROUPS } from '@/utils/format'
+import { useEducationLevelsStore } from '@/stores/educationLevels'
 import BaseBadge from '@/components/common/BaseBadge.vue'
 import BaseCard from '@/components/common/BaseCard.vue'
 import type { ActivityRow } from '@/types/entryDetail'
@@ -8,6 +9,11 @@ import type { ActivityRow } from '@/types/entryDetail'
 const props = defineProps<{
   activityRows: ActivityRow[]
 }>()
+
+const educationLevelsStore = useEducationLevelsStore()
+onMounted(() => {
+  educationLevelsStore.ensureLoaded()
+})
 
 const searchQuery = ref('')
 
@@ -88,7 +94,7 @@ const filteredRows = computed(() => {
             <div v-if="row.levels && row.levels.length" class="flex items-start gap-1.5 flex-wrap">
               <span class="text-slate-400 font-semibold shrink-0">Education:</span>
               <span class="text-slate-700 font-semibold">
-                {{ row.levels.map((l: any) => EDUCATION_LEVELS[l]).join(', ') }}
+                {{ row.levels.map((l: any) => educationLevelsStore.labelById[l] || l).join(', ') }}
               </span>
             </div>
           </div>
