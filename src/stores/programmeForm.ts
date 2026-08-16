@@ -176,7 +176,23 @@ export const useProgrammeFormStore = defineStore('programmeForm', () => {
           saveStore.saveStatus = 'saved'
         }
       } catch (err: any) {
-        if (entryId) toast.error('Failed to load the programme entry data.')
+        if (entryId) {
+          // 403/404 here means the backend's own ownership check
+          // (canManage()/userCanAccessProgrammeEntry) rejected this entry —
+          // e.g. a direct URL to another organisation's draft. The UI
+          // already hides "Continue editing" for entries a user can't
+          // reach, but a typed-in/bookmarked URL bypasses that, so send
+          // them back rather than leaving them on a wizard with no data to
+          // edit and every save attempt about to fail the same way.
+          const status = err?.response?.status
+          if (status === 403 || status === 404) {
+            toast.error("You don't have access to that programme entry.")
+            const isStaff = ['nep_admin', 'nep_coordinator'].includes((useAuthStore() as any).userRole || '')
+            router.replace(isStaff ? '/admin/programmes' : '/dashboard')
+          } else {
+            toast.error('Failed to load the programme entry data.')
+          }
+        }
       }
 
       if (!entryId) _restoreSessionDraft()
@@ -418,12 +434,6 @@ export const useProgrammeFormStore = defineStore('programmeForm', () => {
   let autosaveDirty = false
   let stopAutosaveDeepWatch: (() => void) | null = null
 
-  // Same minimum-required-fields gate as the non-submit "Save & exit" path,
-  // so autosave doesn't hammer the backend with 422s on an empty form.
-  const canAutosave = computed(() =>
-    !!section1Data.value.name?.trim() && !!section1Data.value.startYear
-  )
-
   watch(autosaveEnabled, (enabled) => {
     localStorage.setItem(AUTOSAVE_PREF_KEY, String(enabled))
     if (enabled) armAutosaveInterval()
@@ -440,7 +450,10 @@ export const useProgrammeFormStore = defineStore('programmeForm', () => {
   async function runAutosave() {
     if (!autosaveEnabled.value || !autosaveDirty) return
     if (isInitializing.value || isSaving.value) return
-    if (!canAutosave.value) return
+    // No minimum-fields gate here: draft saves must succeed even on a
+    // completely empty form (backend now allows this — see
+    // StoreProgrammeEntryRequest/UpdateProgrammeEntryRequest, which only
+    // require Section 1 fields when explicitly publishing).
     syncRefsToStore()
     autosaveStatus.value = 'saving'
     const ok = await saveEntry(false, false, false, true)

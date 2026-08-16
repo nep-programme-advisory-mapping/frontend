@@ -6,6 +6,7 @@ import BaseModal from '@/components/common/BaseModal.vue'
 import ToastHost from '@/components/ToastHost.vue'
 import StatusBadge from '@/components/common/StatusBadge.vue'
 import HeaderBreadcrumb from '@/components/common/HeaderBreadcrumb.vue'
+import DraftEntriesTable from '@/components/admin/DraftEntriesTable.vue'
 import { useAdminProgrammes } from '@/composables/useAdminProgrammes'
 
 const programmes = useAdminProgrammes()
@@ -37,6 +38,13 @@ const programmes = useAdminProgrammes()
           :class="programmes.activeTab === 'submitted' ? 'border-[var(--teal-600)] text-[var(--teal-700)]' : 'border-transparent text-[var(--ink-400)] hover:text-[var(--ink-700)]'"
           @click="programmes.setTab('submitted')"
         >All Submitted</button>
+        <button
+          class="px-4 py-2 text-sm font-medium transition-colors border-b-2 -mb-px flex items-center gap-1.5 whitespace-nowrap"
+          :class="programmes.activeTab === 'all-drafts' ? 'border-[var(--teal-600)] text-[var(--teal-700)]' : 'border-transparent text-[var(--ink-400)] hover:text-[var(--ink-700)]'"
+          @click="programmes.setTab('all-drafts')"
+        >
+          All Drafts
+        </button>
         <button
           class="px-4 py-2 text-sm font-medium transition-colors border-b-2 -mb-px flex items-center gap-1.5 whitespace-nowrap"
           :class="programmes.activeTab === 'my-drafts' ? 'border-[var(--teal-600)] text-[var(--teal-700)]' : 'border-transparent text-[var(--ink-400)] hover:text-[var(--ink-700)]'"
@@ -144,69 +152,29 @@ const programmes = useAdminProgrammes()
       </div>
     </template>
 
-    <!-- My Drafts tab -->
+    <!-- All Drafts tab: every organisation's drafts (admin/coordinator) -->
+    <template v-else-if="programmes.activeTab === 'all-drafts'">
+      <DraftEntriesTable
+        :entries="programmes.allDrafts"
+        :loading="programmes.allDraftsLoading"
+        :error="programmes.allDraftsError"
+        :page="programmes.allDraftsPage"
+        :last-page="programmes.allDraftsLastPage"
+        empty-message="No drafts yet across any organisation."
+        @continue="programmes.continueDraft"
+        @page-change="programmes.fetchAllDrafts"
+      />
+    </template>
+
+    <!-- My Drafts tab: only entries this staff member personally authored -->
     <template v-else>
-      <div class="bg-[var(--card)] border border-[var(--line)] rounded-[var(--radius)] overflow-hidden">
-        <div v-if="programmes.myDraftsLoading" class="flex items-center justify-center py-16">
-          <svg class="animate-spin h-5 w-5 text-[var(--ink-400)]" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" />
-            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
-          </svg>
-        </div>
-        <div v-else-if="programmes.myDraftsError" class="py-12 text-center text-sm text-red-500">{{ programmes.myDraftsError }}</div>
-        <div v-else-if="programmes.myDrafts.length === 0" class="py-16 text-center text-sm text-[var(--ink-400)]">No drafts yet. Create an entry for an organisation to see it here.</div>
-        <template v-else>
-          <!-- Desktop table -->
-          <div class="overflow-x-auto">
-            <table class="w-full text-sm min-w-[500px] hidden md:table">
-              <thead>
-                <tr class="border-b border-[var(--line)] text-xs font-semibold text-[var(--ink-400)] uppercase tracking-wider">
-                  <th class="text-left px-5 py-3">Programme</th>
-                  <th class="text-left px-5 py-3 hidden sm:table-cell">Organisation</th>
-                  <th class="text-left px-5 py-3 hidden lg:table-cell">Core activities</th>
-                  <th class="text-left px-5 py-3 hidden sm:table-cell">Updated</th>
-                  <th class="text-left px-5 py-3">Action</th>
-                </tr>
-              </thead>
-              <tbody class="divide-y divide-[var(--line-soft)]">
-                <tr v-for="entry in programmes.myDrafts" :key="entry.id" class="hover:bg-[var(--bg)] transition-colors">
-                  <td class="px-5 py-3.5">
-                    <div class="font-medium text-[var(--ink-900)]">{{ entry.programme_name || 'Untitled' }}</div>
-                    <div class="text-xs text-[var(--ink-400)] mt-0.5">{{ entry.start_year }}–{{ entry.end_year || 'ongoing' }}</div>
-                  </td>
-                  <td class="px-5 py-3.5 text-xs text-[var(--ink-500)] hidden sm:table-cell">{{ entry.organisation?.name ?? '—' }}</td>
-                  <td class="px-5 py-3.5 hidden lg:table-cell">
-                    <div class="flex flex-wrap gap-1">
-                      <BaseBadge v-for="code in (entry.primaryActivities || [])" :key="code" tone="teal">{{ code }}</BaseBadge>
-                      <span v-if="!entry.primaryActivities?.length" class="text-xs text-gray-300">—</span>
-                    </div>
-                  </td>
-                  <td class="px-5 py-3.5 text-xs text-[var(--ink-400)] hidden sm:table-cell whitespace-nowrap">{{ entry.relativeUpdated }}</td>
-                  <td class="px-5 py-3.5" @click.stop>
-                    <button class="px-2.5 py-1 text-xs font-medium text-[var(--ink-600)] bg-[var(--bg)] border border-[var(--line)] rounded-md hover:border-[var(--teal-600)] hover:text-[var(--teal-700)] transition-colors whitespace-nowrap" @click="programmes.openEntry(entry.id)">Continue →</button>
-                  </td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-          <!-- Mobile cards -->
-          <div class="flex flex-col md:hidden">
-            <div v-for="entry in programmes.myDrafts" :key="entry.id" class="py-4 px-[18px] border-b border-[var(--line-soft)] last:border-b-0">
-              <div class="font-medium text-[var(--ink-900)] text-sm">{{ entry.programme_name || 'Untitled' }}</div>
-              <div class="text-xs text-[var(--ink-400)] mt-1">{{ entry.start_year }}–{{ entry.end_year || 'ongoing' }}</div>
-              <div class="flex items-center flex-wrap gap-2 mt-2 text-xs text-[var(--ink-500)]">
-                <span v-if="entry.organisation?.name" class="truncate max-w-[160px]">{{ entry.organisation.name }}</span>
-                <span class="text-[var(--ink-400)] whitespace-nowrap">{{ entry.relativeUpdated }}</span>
-              </div>
-              <div v-if="entry.primaryActivities?.length" class="flex flex-wrap gap-1 mt-2">
-                <BaseBadge v-for="code in entry.primaryActivities.slice(0, 3)" :key="code" tone="teal">{{ code }}</BaseBadge>
-                <BaseBadge v-if="entry.primaryActivities.length > 3" tone="gray">+{{ entry.primaryActivities.length - 3 }}</BaseBadge>
-              </div>
-              <button class="mt-2.5 px-2.5 py-1 text-xs font-medium text-[var(--ink-600)] bg-[var(--bg)] border border-[var(--line)] rounded-md hover:border-[var(--teal-600)] hover:text-[var(--teal-700)] transition-colors" @click="programmes.openEntry(entry.id)">Continue →</button>
-            </div>
-          </div>
-        </template>
-      </div>
+      <DraftEntriesTable
+        :entries="programmes.myDrafts"
+        :loading="programmes.myDraftsLoading"
+        :error="programmes.myDraftsError"
+        empty-message="No drafts yet. Create an entry for an organisation to see it here."
+        @continue="programmes.continueDraft"
+      />
     </template>
 
     <!-- Org Picker Modal -->

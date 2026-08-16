@@ -53,7 +53,16 @@ function formatUserFriendlyError(rawMsg: string): string {
     .replace(/provinces\.\d+\.[\w.-]+/g, 'geographic location')
 }
 
-function buildIdentityPayload(section1Data: any, shouldSubmit: boolean) {
+// `includeSubmitFlag` is true only for an explicit, non-staff Publish click.
+// Autosave and plain "Save & exit" draft saves must NEVER send is_submitted
+// at all — sending `false` on every autosave tick would silently unpublish
+// an already-published entry the user is just editing; omitting the key
+// leaves the backend's existing value (or its `false` column default for a
+// brand-new entry) untouched. Only the explicit Publish action is allowed to
+// flip this flag, and only in the true direction from the frontend's side —
+// the backend still enforces full required-field + cross-resource
+// validation before honoring it (see UpdateProgrammeEntryRequest).
+function buildIdentityPayload(section1Data: any, includeSubmitFlag: boolean) {
   const payload: any = {
     programme_name: section1Data.name,
     start_year: section1Data.startYear,
@@ -61,7 +70,9 @@ function buildIdentityPayload(section1Data: any, shouldSubmit: boolean) {
     ongoing: section1Data.isOngoing,
     method: section1Data.method || null,
     verified_date: section1Data.verifiedDate || null,
-    is_submitted: shouldSubmit,
+  }
+  if (includeSubmitFlag) {
+    payload.is_submitted = true
   }
   if (section1Data.fteStaff !== null && String(section1Data.fteStaff) !== '')
     payload.fte_staff = Number(section1Data.fteStaff)

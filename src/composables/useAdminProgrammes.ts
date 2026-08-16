@@ -10,7 +10,7 @@ import type { EntryRow } from '@/types/adminProgrammes'
 export function useAdminProgrammes() {
   const router = useRouter()
 
-  const activeTab = ref<'submitted' | 'my-drafts'>('submitted')
+  const activeTab = ref<'submitted' | 'my-drafts' | 'all-drafts'>('submitted')
 
   const entries = ref<EntryRow[]>([])
   const entriesLoading = ref(false)
@@ -23,6 +23,17 @@ export function useAdminProgrammes() {
   const myDrafts = ref<EntryRow[]>([])
   const myDraftsLoading = ref(false)
   const myDraftsError = ref('')
+
+  // Every organisation's drafts (backend now scopes /programme-entries/draft
+  // this way for organisation-wide-access users) — lets an authorized
+  // reviewer find and continue any organisation's draft, not just ones they
+  // personally authored. Distinct from myDrafts above, which stays scoped to
+  // "only what I created" for whoever prefers that narrower view.
+  const allDrafts = ref<EntryRow[]>([])
+  const allDraftsLoading = ref(false)
+  const allDraftsError = ref('')
+  const allDraftsPage = ref(1)
+  const allDraftsLastPage = ref(1)
 
   const orgNameById = ref<Record<number, string>>({})
 
@@ -173,37 +184,38 @@ export function useAdminProgrammes() {
     return _fetchEntriesPromise
   }
 
+  function toEntryRow(e: unknown): EntryRow {
+    const entry = e as Record<string, unknown>
+    const org = entry.organisation as Record<string, unknown> | null | undefined
+    let orgName: string | null = org && typeof org.name === 'string'
+      ? org.name
+      : (typeof entry.organisation_name === 'string' ? entry.organisation_name : null)
+    if (!orgName) {
+      const orgId = Number(entry.organisation_id)
+      if (Number.isFinite(orgId)) {
+        orgName = orgNameById.value[orgId] ?? `Org #${orgId}`
+      }
+    }
+    const primaryActivities = extractPrimaryActivityCodes(entry.activities as any[])
+    return {
+      id: Number(entry.id),
+      programme_name: String(entry.programme_name ?? ''),
+      is_submitted: !!entry.is_submitted,
+      is_unverified: !!entry.is_unverified,
+      start_year: entry.start_year as number | null,
+      end_year: entry.end_year as number | null,
+      organisation: orgName ? { name: orgName } : null,
+      primaryActivities,
+      relativeUpdated: formatRelativeTime(entry.updated_at as string) || '—',
+    }
+  }
+
   async function fetchMyDrafts() {
     myDraftsLoading.value = true
     myDraftsError.value = ''
     try {
       const res = await memberApi.getMyDraftEntries()
-      const body = res.data
-      myDrafts.value = (body.data || []).map((e: unknown): EntryRow => {
-        const entry = e as Record<string, unknown>
-        const org = entry.organisation as Record<string, unknown> | null | undefined
-        let orgName: string | null = org && typeof org.name === 'string'
-          ? org.name
-          : (typeof entry.organisation_name === 'string' ? entry.organisation_name : null)
-        if (!orgName) {
-          const orgId = Number(entry.organisation_id)
-          if (Number.isFinite(orgId)) {
-            orgName = orgNameById.value[orgId] ?? `Org #${orgId}`
-          }
-        }
-        const primaryActivities = extractPrimaryActivityCodes(entry.activities as any[])
-        return {
-          id: Number(entry.id),
-          programme_name: String(entry.programme_name ?? ''),
-          is_submitted: !!entry.is_submitted,
-          is_unverified: !!entry.is_unverified,
-          start_year: entry.start_year as number | null,
-          end_year: entry.end_year as number | null,
-          organisation: orgName ? { name: orgName } : null,
-          primaryActivities,
-          relativeUpdated: formatRelativeTime(entry.updated_at as string) || '—',
-        }
-      })
+      myDrafts.value = (res.data.data || []).map(toEntryRow)
     } catch {
       myDraftsError.value = 'Failed to load drafts.'
     } finally {
@@ -211,10 +223,29 @@ export function useAdminProgrammes() {
     }
   }
 
-  function setTab(tab: 'submitted' | 'my-drafts') {
+  async function fetchAllDrafts(page = 1) {
+    allDraftsLoading.value = true
+    allDraftsError.value = ''
+    try {
+      const res = await memberApi.getDraftProgrammeEntries(page)
+      const body = res.data
+      allDrafts.value = (body.data || []).map(toEntryRow)
+      allDraftsPage.value = body.current_page ?? page
+      allDraftsLastPage.value = body.last_page ?? 1
+    } catch {
+      allDraftsError.value = 'Failed to load drafts.'
+    } finally {
+      allDraftsLoading.value = false
+    }
+  }
+
+  function setTab(tab: 'submitted' | 'my-drafts' | 'all-drafts') {
     activeTab.value = tab
     if (tab === 'my-drafts' && myDrafts.value.length === 0 && !myDraftsLoading.value) {
       fetchMyDrafts()
+    }
+    if (tab === 'all-drafts' && allDrafts.value.length === 0 && !allDraftsLoading.value) {
+      fetchAllDrafts()
     }
   }
 
@@ -239,6 +270,14 @@ export function useAdminProgrammes() {
     router.push(`/entries/${id}`)
   }
 
+  // Drafts aren't complete enough to render on the read-only detail page
+  // (see MemberDashboard.vue's own "Open" button, disabled for drafts for
+  // the same reason) — continuing a draft needs the edit wizard instead,
+  // loaded via the same ?id= pattern the autosave/edit flow already uses.
+  function continueDraft(id: number) {
+    router.push(`/entries/new?id=${id}`)
+  }
+
   function openCreatePicker() {
     pickerOrgId.value = null
     pickerSearch.value = ''
@@ -254,12 +293,14 @@ export function useAdminProgrammes() {
 
   onMounted(async () => {
     const route = router.currentRoute.value
-    if (route.query.tab === 'my-drafts') {
-      activeTab.value = 'my-drafts'
+    if (route.query.tab === 'my-drafts' || route.query.tab === 'all-drafts') {
+      activeTab.value = route.query.tab
     }
     await loadOrgNames()
     if (activeTab.value === 'my-drafts') {
       fetchMyDrafts()
+    } else if (activeTab.value === 'all-drafts') {
+      fetchAllDrafts()
     } else {
       fetchEntries(1)
     }
@@ -280,6 +321,11 @@ export function useAdminProgrammes() {
     myDrafts,
     myDraftsLoading,
     myDraftsError,
+    allDrafts,
+    allDraftsLoading,
+    allDraftsError,
+    allDraftsPage,
+    allDraftsLastPage,
     showOrgPicker,
     pickerSearch,
     pickerOrgId,
@@ -290,10 +336,12 @@ export function useAdminProgrammes() {
     onPickerSearchInput,
     closeOrgPicker,
     openEntry,
+    continueDraft,
     openCreatePicker,
     confirmCreate,
     fetchEntries,
     fetchMyDrafts,
+    fetchAllDrafts,
     onOrgFilterChange,
   })
 }
