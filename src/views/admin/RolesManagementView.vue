@@ -57,11 +57,11 @@ async function confirmDeleteRole() {
 }
 
 function canDeleteRole(role: Role): boolean {
-  return !role.is_system && (role.users_count ?? 0) === 0
+  return role.name !== 'nep_admin' && (role.users_count ?? 0) === 0
 }
 
 function deleteBlockedReason(role: Role): string {
-  if (role.is_system) return 'Built-in system roles cannot be deleted.'
+  if (role.name === 'nep_admin') return 'The NEP Administrator role cannot be deleted.'
   if ((role.users_count ?? 0) > 0) return `Reassign the ${role.users_count} user(s) on this role before deleting it.`
   return ''
 }
