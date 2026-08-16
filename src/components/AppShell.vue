@@ -30,74 +30,72 @@ interface NavSection {
   items: NavItem[]
 }
 
+/**
+ * Master list of every possible staff nav item, keyed to the exact
+ * permission names the backend seeds (RolePermissionSeeder).
+ * Filtered live from auth.permissions — no role-name checks anywhere.
+ */
+const ALL_STAFF_NAV: { section: string; items: NavItem[] }[] = [
+  {
+    section: 'WORKSPACE',
+    items: [
+      { to: '/admin/dashboard', label: 'Overview', icon: 'home', permission: 'dashboard.view' },
+      { to: '/map', label: 'The Map', icon: 'map', permission: 'reports.view' },
+      { to: '/adviser', label: 'The Adviser', icon: 'bolt', permission: 'advisory.view-all' },
+      { to: '/admin/programmes', label: 'Programme entries', icon: 'file', permission: 'programmes.view' },
+    ],
+  },
+  {
+    section: 'ADMINISTRATION',
+    items: [
+      { to: '/admin/users', label: 'User Management', icon: 'users', permission: 'users.view' },
+      { to: '/admin/roles', label: 'Roles', icon: 'shield', permission: 'roles.view' },
+      { to: '/admin/permissions', label: 'Permissions', icon: 'lock', permission: 'permissions.view' },
+      { to: '/admin/organization', label: 'Organization', icon: 'building', permission: 'organisations.view' },
+      { to: '/admin/taxonomy', label: 'Taxonomy data', icon: 'list', permission: 'taxonomy.view' },
+      { to: '/policy', label: 'Policy library', icon: 'book', permission: 'policy.view' },
+    ],
+  },
+]
+
 const navItems = computed<any>(() => {
-  if (auth.userRole === 'nep_admin') {
-    return [
-      {
-        section: 'COORDINATION',
-        items: [
-          { to: '/admin/dashboard', label: 'Overview', icon: 'home' },
-          { to: '/map', label: 'The Map', icon: 'map' },
-          { to: '/adviser', label: 'The Adviser', icon: 'bolt' },
-          { to: '/admin/programmes', label: 'Programme entries', icon: 'file' },
-        ],
-      },
-      {
-        section: 'ADMINISTRATION',
-        items: visibleItems([
-          { to: '/admin/taxonomy', label: 'Taxonomy data', icon: 'list', permission: 'taxonomy.view' },
-          { to: '/admin/organization', label: 'Organization', icon: 'building', permission: 'organisations.view' },
-          { to: '/admin/users', label: 'User Management', icon: 'users', permission: 'users.view' },
-          { to: '/admin/roles', label: 'Roles', icon: 'shield', permission: 'roles.view' },
-          { to: '/admin/permissions', label: 'Permissions', icon: 'lock', permission: 'permissions.view' },
-          { to: '/policy', label: 'Policy library', icon: 'book' },
-        ]),
-      },
-    ]
+  // A user is treated as "staff" if they have at least one permission that
+  // appears in the master staff nav list — role name is never checked.
+  const staffPermissions = new Set(ALL_STAFF_NAV.flatMap(s => s.items.map(i => i.permission!)))
+  const isStaff = auth.isSuperAdmin || auth.permissions.some(p => staffPermissions.has(p))
+
+  if (!isStaff) {
+    // Member nav — filtered by their actual permissions
+    return visibleItems([
+      { to: '/dashboard', label: 'Dashboard', icon: 'dashboard' },
+      { to: '/policy', label: 'Policy library', icon: 'book', permission: 'policy.view' },
+      { to: '/account', label: 'Organisation Profile', icon: 'building' },
+    ])
   }
 
-  if (auth.userRole === 'nep_coordinator') {
-    return [
-      {
-        section: 'COORDINATION',
-        items: [
-          { to: '/manager/dashboard', label: 'Overview', icon: 'home' },
-          { to: '/map', label: 'The Map', icon: 'map' },
-          { to: '/adviser', label: 'The Adviser', icon: 'bolt' },
-          { to: '/admin/programmes', label: 'Programme entries', icon: 'file' },
-        ],
-      },
-      {
-        section: 'REFERENCE',
-        items: [
-        { to: '/policy', label: 'Policy library', icon: 'book' },
-        ],
-      },
-    ]
-  }
-
-  return [
-    { to: '/dashboard', label: 'Dashboard', icon: 'dashboard' },
-    { to: '/policy', label: 'Policy library', icon: 'book' },
-    { to: '/account', label: 'Organisation Profile', icon: 'building' },
-  ]
+  // Staff nav — master list filtered by actual permissions
+  return ALL_STAFF_NAV
+    .map((section) => ({ ...section, items: visibleItems(section.items) }))
+    .filter((section) => section.items.length > 0)
 })
 
-// Derive a human-friendly title from the stored role
+// Derive a human-friendly portal title from the role name
 const portalTitle = computed(() => {
   const role = auth.userRole
   if (role === 'nep_admin') return 'NEP Admin Portal'
   if (role === 'nep_coordinator') return 'NEP Coordinator Portal'
-  return 'NEP Member Portal'
+  if (role === 'member_org') return 'NEP Member Portal'
+  return 'NEP Portal'
 })
 
-// Capitalise the role label shown under the username
+// Human-readable role label — format any role name nicely
 const roleLabel = computed(() => {
   const role = auth.userRole
+  if (!role) return ''
   if (role === 'nep_admin') return 'Admin'
   if (role === 'nep_coordinator') return 'Coordinator'
   if (role === 'member_org') return 'Member'
-  return role?.charAt(0).toUpperCase() + role?.slice(1) || ''
+  return role.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase())
 })
 
 // Display name from the logged-in user object, fallback to role label
@@ -147,39 +145,39 @@ function logout() {
       </div>
 
       <nav class="flex-1 overflow-y-auto p-3.5 space-y-0.5">
-        <template v-if="auth.userRole === 'nep_coordinator' || auth.userRole === 'nep_admin'">
+        <!-- Staff: sectioned nav filtered by permissions -->
+        <template v-if="Array.isArray(navItems) && navItems[0] && 'section' in navItems[0]">
           <div v-for="(section, sIndex) in navItems" :key="sIndex" class="mb-4">
-            <template v-if="'section' in section">
-              <div class="text-[10.5px] uppercase tracking-widest text-white/35 px-3 mb-2 mt-1 font-semibold">
-                {{ section.section }}
-              </div>
-              <RouterLink
-                v-for="item in section.items"
-                :key="item.to"
-                :to="item.to"
-                @click="isSidebarOpen = false"
-                class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-teal-200/80 text-sm font-semibold hover:bg-white/8 hover:text-white transition-colors mb-0.5"
-                active-class="!bg-white/15 !text-white"
+            <div class="text-[10.5px] uppercase tracking-widest text-white/35 px-3 mb-2 mt-1 font-semibold">
+              {{ section.section }}
+            </div>
+            <RouterLink
+              v-for="item in section.items"
+              :key="item.to"
+              :to="item.to"
+              @click="isSidebarOpen = false"
+              class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-teal-200/80 text-sm font-semibold hover:bg-white/8 hover:text-white transition-colors mb-0.5"
+              active-class="!bg-white/15 !text-white"
+            >
+              <BaseIcon :name="item.icon" size="18" />
+              <span class="flex-1">{{ item.label }}</span>
+              <span
+                v-if="item.badge"
+                class="bg-amber-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full min-w-[20px] text-center"
               >
-                <BaseIcon :name="item.icon" size="18" />
-                <span class="flex-1">{{ item.label }}</span>
-                <span
-                  v-if="item.badge"
-                  class="bg-amber-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full min-w-[20px] text-center"
-                >
-                  {{ item.badge }}
-                </span>
-              </RouterLink>
-            </template>
+                {{ item.badge }}
+              </span>
+            </RouterLink>
           </div>
         </template>
 
+        <!-- Member org: flat nav -->
         <template v-else>
           <div class="text-[10px] uppercase tracking-wider text-white/40 px-2.5 mb-1.5 font-semibold">
             WORKSPACE
           </div>
           <RouterLink
-            v-for="item in navItems as NavItem[]"
+            v-for="item in navItems"
             :key="item.to"
             :to="item.to"
             @click="isSidebarOpen = false"

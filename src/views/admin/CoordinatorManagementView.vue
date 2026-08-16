@@ -7,12 +7,12 @@ import UserManagementPanel from '@/components/user/UserManagementPanel.vue'
 import { usePermission } from '@/composables/usePermission'
 import { useUsersAdminStore } from '@/stores/usersAdmin'
 
-const { isAdmin } = usePermission()
+const { hasPermission } = usePermission()
 const router = useRouter()
 const store = useUsersAdminStore()
 
 onMounted(async () => {
-  if (!isAdmin.value) {
+  if (!hasPermission('users.view')) {
     router.replace({ name: 'forbidden' })
     return
   }

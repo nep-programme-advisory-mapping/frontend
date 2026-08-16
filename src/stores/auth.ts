@@ -55,7 +55,10 @@ export const useAuthStore = defineStore('auth', () => {
     userRole.value = typeof user?.role === 'string' ? user.role : ''
     currentUserId.value = user?.id ? String(user.id) : null
     isLoggedIn.value = Boolean(user)
-    permissions.value = Array.isArray(user?.permissions) ? (user.permissions as string[]) : []
+    const rawPerms = Array.isArray(user?.permissions) ? user.permissions : []
+    permissions.value = rawPerms.map((p: unknown) =>
+      typeof p === 'string' ? p : (p as { name: string }).name
+    )
     isSuperAdmin.value = Boolean(user?.is_super_admin)
 
     if (user) {

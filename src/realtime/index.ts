@@ -20,7 +20,12 @@ export async function connectRealtimeForRole(role?: string, userId?: string | nu
   const echo = await getEcho()
   const notificationStore = useNotificationStore()
 
-  if (role === 'nep_admin' || role === 'nep_coordinator') {
+  // Subscribe to the shared staff channel for any user who has at least one
+  // staff-level permission (i.e. not a plain member_org). The backend's
+  // broadcasting auth will reject the subscription if the user truly lacks
+  // access, so this is just an optimistic attempt.
+  const isStaff = role !== 'member_org'
+  if (isStaff) {
     const taxonomy = useTaxonomyStore()
     echo.private('nep-admin')
       .listen('.other.queue.created', (payload: OtherQueueCreatedPayload) => {
@@ -59,9 +64,10 @@ export async function connectRealtimeForRole(role?: string, userId?: string | nu
     subscribedChannels.push('private-nep-admin')
   }
 
-  // Personal channel for all authenticated users (member_org, coordinator, admin)
+  // Personal channel for all authenticated users
   if (userId) {
     const channelName = `App.Models.User.${userId}`
+    // Only member_org users need the entries store refresh on new programme events
     const entriesStore = role === 'member_org' ? useEntriesStore() : null
     echo.private(channelName)
       .listen('.programme.draft.created', (payload: ProgrammeDraftCreatedPayload) => {

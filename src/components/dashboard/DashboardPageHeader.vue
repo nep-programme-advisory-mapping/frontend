@@ -14,8 +14,9 @@ import { useAuthStore } from '@/stores/auth'
 const auth = useAuthStore()
 
 const title = computed(() => {
-  if (auth.userRole === 'nep_coordinator') return 'Coordinator overview'
-  if (auth.userRole === 'nep_admin') return 'Admin overview'
-  return 'Overview'
+  if (auth.userRole === 'member_org') return 'Overview'
+  return auth.currentUser
+    ? `${(auth.currentUser as any).name?.split(' ')[0] ?? 'Staff'}'s overview`
+    : 'Overview'
 })
 </script>

@@ -8,11 +8,13 @@ import ToastHost from '@/components/ToastHost.vue'
 import { useOrganisationsStore } from '@/stores/organisations'
 import { storeToRefs } from 'pinia'
 import { useToast } from '@/utils/toast'
+import { usePermission } from '@/composables/usePermission'
 import type { Organisation, OrganisationForm } from '@/types/organisations'
 
 const store = useOrganisationsStore()
 const { organisations, loading, saving, error, currentPage, lastPage, total, search } = storeToRefs(store)
 const orgStore = store
+const { hasPermission } = usePermission()
 
 const toast = useToast()
 const showFormModal = ref(false)
@@ -89,7 +91,9 @@ async function handleConfirm() {
       <h1 class="text-2xl sm:text-3xl font-bold text-slate-900 tracking-tight">Organisation Management</h1>
       <p class="mt-1 text-xs sm:text-sm text-slate-500 font-medium">Manage member organisations, contacts and status.</p>
     </div>
-    <button class="shrink-0 inline-flex items-center gap-2 px-4 py-2.5 bg-[#0F5A4D] text-white text-xs font-bold rounded-xl hover:bg-[#0c483d] transition-all shadow-2xs cursor-pointer self-start sm:self-auto" @click="openCreate">
+    <button
+        v-if="hasPermission('organisations.create')"
+        class="shrink-0 inline-flex items-center gap-2 px-4 py-2.5 bg-[#0F5A4D] text-white text-xs font-bold rounded-xl hover:bg-[#0c483d] transition-all shadow-2xs cursor-pointer self-start sm:self-auto" @click="openCreate">
       <BaseIcon name="plus" :size="15" />
       Create Organisation
     </button>

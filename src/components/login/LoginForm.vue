@@ -48,12 +48,25 @@ async function submit() {
   const success = await authStore.login(email.value, password.value)
 
   if (success) {
-    if (authStore.userRole === 'nep_admin') {
-      await router.push({ name: 'admin-dashboard' })
-    } else if (authStore.userRole === 'nep_coordinator') {
-      await router.push({ name: 'manager-dashboard' })
-    } else {
+    if (authStore.userRole === 'member_org') {
       await router.push({ name: 'dashboard' })
+    } else {
+      const staffRoutes = [
+        { permission: 'dashboard.view', name: 'admin-dashboard' },
+        { permission: 'programmes.view', name: 'admin-programmes' },
+        { permission: 'advisory.view-all', name: 'adviser' },
+        { permission: 'reports.view', name: 'map' },
+        { permission: 'users.view', name: 'admin-users' },
+        { permission: 'organisations.view', name: 'admin-organization' },
+        { permission: 'roles.view', name: 'admin-roles' },
+        { permission: 'permissions.view', name: 'admin-permissions' },
+        { permission: 'taxonomy.view', name: 'admin-taxonomy' },
+        { permission: 'policy.view', name: 'policy' },
+      ]
+      const first = authStore.isSuperAdmin
+        ? staffRoutes[0]
+        : staffRoutes.find((r) => authStore.hasPermission(r.permission))
+      await router.push({ name: first?.name ?? 'map' })
     }
   } else {
     // Clear password input immediately for security
