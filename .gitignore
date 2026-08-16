@@ -1,0 +1,63 @@
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# Environment files — never commit secrets
+.env
+.env.*
+!.env.example
+
+node_modules
+.DS_Store
+Thumbs.db
+dist
+dist-ssr
+coverage
+*.local
+
+# Editor directories and files
+.vscode/*
+!.vscode/extensions.json
+.idea
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+*.tsbuildinfo
+.eslintcache
+
+# Ignore every README variant (any case, any suffix) except the canonical README.md
+[Rr][Ee][Aa][Dd][Mm][Ee]*
+!README.md
+
+# Cypress
+/cypress/videos/
+/cypress/screenshots/
+
+# Vitest
+__screenshots__/
+
+# Test reports (generated)
+vitest-junit.xml
+junit-report.xml
+
+# Playwright — test-results/report are build output; .auth holds live
+# session tokens captured by tests/e2e/global.setup.ts and must never be
+# committed (it's effectively a live credential for whatever account it
+# was captured from).
+/playwright-report/
+/tests/e2e/.artifacts/
+/tests/e2e/.auth/
+
+# Vite
+*.timestamp-*-*.mjs
+
+# Type generation
+*.d.ts.map
