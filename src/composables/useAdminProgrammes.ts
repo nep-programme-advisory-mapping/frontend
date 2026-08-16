@@ -271,7 +271,7 @@ export function useAdminProgrammes() {
   }
 
   // Drafts aren't complete enough to render on the read-only detail page
-  // (see MemberDashboard.vue's own "Open" button, disabled for drafts for
+  // (see ProgrammeDashboard.vue's own "Open" button, disabled for drafts for
   // the same reason) — continuing a draft needs the edit wizard instead,
   // loaded via the same ?id= pattern the autosave/edit flow already uses.
   function continueDraft(id: number) {

@@ -20,6 +20,9 @@ export const useAuthStore = defineStore('auth', () => {
   // it on login/session/user responses — see User::effectivePermissionNames().
   const permissions = ref<string[]>(JSON.parse(sessionStorage.getItem('permissions') ?? '[]'))
   const isSuperAdmin = ref<boolean>(sessionStorage.getItem('isSuperAdmin') === 'true')
+  const organisationId = ref<number | null>(
+    sessionStorage.getItem('organisationId') ? Number(sessionStorage.getItem('organisationId')) : null
+  )
 
   const isAuthenticated = computed(() => isLoggedIn.value)
   // Legacy role-name convenience getters — kept for call sites that only
@@ -27,6 +30,20 @@ export const useAuthStore = defineStore('auth', () => {
   // hasPermission() so a custom/dynamic role works without a code change.
   const isAdmin = computed(() => userRole.value === 'nep_admin')
   const isCoordinatorOrAdmin = computed(() => ['nep_admin', 'nep_coordinator'].includes(userRole.value))
+
+  /**
+   * Mirrors the backend's User::hasOrganisationWideAccess() exactly: a
+   * super admin, or anyone with no organisation of their own (built-in
+   * staff today, any "staff-like" custom role tomorrow). Org-bound users —
+   * member_org, or any custom role assigned an organisation — are not,
+   * regardless of which individual permissions they hold. This is
+   * deliberately NOT derived from permission overlap (e.g. "do they hold
+   * programmes.view") — several permissions, like programmes.view, are
+   * legitimately granted to both staff and org-bound roles at once, just
+   * scoped differently server-side, so that overlap is not a reliable
+   * staff/member signal.
+   */
+  const hasOrganisationWideAccess = computed(() => isSuperAdmin.value || organisationId.value === null)
 
   /**
    * The single source of truth for "can this user do X" on the frontend.
@@ -60,12 +77,15 @@ export const useAuthStore = defineStore('auth', () => {
       typeof p === 'string' ? p : (p as { name: string }).name
     )
     isSuperAdmin.value = Boolean(user?.is_super_admin)
+    organisationId.value = user?.organisation_id != null ? Number(user.organisation_id) : null
 
     if (user) {
       sessionStorage.setItem('isLoggedIn', 'true')
       sessionStorage.setItem('userRole', userRole.value)
       sessionStorage.setItem('permissions', JSON.stringify(permissions.value))
       sessionStorage.setItem('isSuperAdmin', String(isSuperAdmin.value))
+      if (organisationId.value !== null) sessionStorage.setItem('organisationId', String(organisationId.value))
+      else sessionStorage.removeItem('organisationId')
       if (currentUserId.value) sessionStorage.setItem('currentUserId', currentUserId.value)
       connectRealtimeForRole(userRole.value, currentUserId.value).catch(err => {
         console.error('[Auth] Failed to connect realtime:', err)
@@ -78,6 +98,7 @@ export const useAuthStore = defineStore('auth', () => {
       sessionStorage.removeItem('currentUserId')
       sessionStorage.removeItem('permissions')
       sessionStorage.removeItem('isSuperAdmin')
+      sessionStorage.removeItem('organisationId')
     }
   }
 
@@ -214,6 +235,8 @@ export const useAuthStore = defineStore('auth', () => {
     userRole,
     permissions,
     isSuperAdmin,
+    organisationId,
+    hasOrganisationWideAccess,
     hasPermission,
     hasAnyPermission,
     login,

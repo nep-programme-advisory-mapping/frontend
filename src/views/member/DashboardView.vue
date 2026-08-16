@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import AppShell from '@/components/AppShell.vue'
 import HeaderBreadcrumb from '@/components/common/HeaderBreadcrumb.vue'
-import MemberDashboard from '@/components/programme/MemberDashboard.vue'
+import ProgrammeDashboard from '@/components/programme/ProgrammeDashboard.vue'
 </script>
 
 <template>
@@ -10,6 +10,6 @@ import MemberDashboard from '@/components/programme/MemberDashboard.vue'
       <HeaderBreadcrumb title="Dashboard" />
     </template>
 
-    <MemberDashboard />
+    <ProgrammeDashboard />
   </AppShell>
 </template>

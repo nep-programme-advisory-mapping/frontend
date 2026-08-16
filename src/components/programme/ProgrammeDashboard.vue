@@ -23,7 +23,13 @@ const entries = useEntriesStore()
 const auth = useAuthStore()
 const toast = useToast()
 
-const canSeeDraft = computed(() => !['nep_admin', 'nep_coordinator'].includes(auth.userRole))
+// Same list/KPI/tabs view for every role — only the data scope differs, and
+// that's already handled server-side (entriesByStatus() etc. return
+// everything for organisation-wide-access users, one organisation's rows
+// otherwise — see ProgrammeEntryController). This is purely a display
+// decision: an all-organisations view needs an Organisation column and
+// different copy, an org-bound view doesn't.
+const isAllOrgsView = computed(() => auth.hasOrganisationWideAccess)
 
 const selectedReportEntry = ref<any>(null)
 const showReportModal = ref(false)
@@ -56,8 +62,7 @@ async function handleExportAllProgrammes() {
 watch(() => route.query.tab, () => {
   const requestedTab = route.query.tab as 'all' | 'draft' | 'submitted' || 'all'
   const validTabs = ['all', 'draft', 'submitted']
-  const parsedTab = validTabs.includes(requestedTab) ? requestedTab : 'all'
-  const tab = !canSeeDraft.value && parsedTab !== 'submitted' ? 'submitted' : parsedTab
+  const tab = validTabs.includes(requestedTab) ? requestedTab : 'all'
   entries.switchTab(tab as 'all' | 'draft' | 'submitted', true)
 }, { immediate: true })
 </script>
@@ -76,7 +81,7 @@ watch(() => route.query.tab, () => {
           {{ entries.unverifiedCount }} {{ entries.unverifiedCount === 1 ? 'entry' : 'entries' }} require attention
         </h4>
         <p class="text-xs text-amber-700/90 mt-0.5">
-          Please review your unverified entries to ensure all information is up to date and accurate.
+          Please review {{ isAllOrgsView ? '' : 'your ' }}unverified entries to ensure all information is up to date and accurate.
         </p>
       </div>
     </div>
@@ -102,17 +107,17 @@ watch(() => route.query.tab, () => {
 
   <!-- Tabs -->
   <PageHeader
-    title="Your programme entries"
-    subtitle="Organisational account — visible to your organisation and NEP staff"
+    :title="isAllOrgsView ? 'All programme entries' : 'Your programme entries'"
+    :subtitle="isAllOrgsView ? 'All organisations — visible to NEP staff' : 'Organisational account — visible to your organisation and NEP staff'"
     mb="mb-3"
   >
     <div class="flex gap-1 bg-gray-100 p-1 rounded-lg">
-      <button v-if="canSeeDraft"
+      <button
         :class="['px-4 py-2 text-sm font-medium rounded-md transition-colors', entries.activeTab === 'all' ? 'bg-white text-teal-800 shadow-sm' : 'text-gray-500 hover:text-gray-700']"
         @click="entries.switchTab('all')">
         All
       </button>
-      <button v-if="canSeeDraft"
+      <button
         :class="['px-4 py-2 text-sm font-medium rounded-md transition-colors', entries.activeTab === 'draft' ? 'bg-white text-teal-800 shadow-sm' : 'text-gray-500 hover:text-gray-700']"
         @click="entries.switchTab('draft')">
         Draft
@@ -163,7 +168,9 @@ watch(() => route.query.tab, () => {
       <EmptyState
         icon="file"
         :title="entries.activeTab === 'all' ? 'No entries' : (entries.activeTab === 'draft' ? 'No draft entries' : 'No submitted entries')"
-        :message="entries.activeTab === 'all' ? 'You haven\'t created any programme entries yet.' : (entries.activeTab === 'draft' ? 'You haven\'t created any draft programme entries yet.' : 'No programme entries have been submitted yet.')"
+        :message="isAllOrgsView
+          ? (entries.activeTab === 'all' ? 'No programme entries exist yet, across any organisation.' : (entries.activeTab === 'draft' ? 'No organisation has any draft programme entries yet.' : 'No programme entries have been submitted yet.'))
+          : (entries.activeTab === 'all' ? 'You haven\'t created any programme entries yet.' : (entries.activeTab === 'draft' ? 'You haven\'t created any draft programme entries yet.' : 'No programme entries have been submitted yet.'))"
       >
         <template #action>
           <NewEntryButton />
@@ -179,6 +186,7 @@ watch(() => route.query.tab, () => {
           <thead>
             <tr class="border-b border-gray-100 text-xs font-medium text-gray-400 uppercase tracking-wider">
               <th class="text-left px-5 py-3">Programme</th>
+              <th v-if="isAllOrgsView" class="text-left px-5 py-3 hidden sm:table-cell">Organisation</th>
               <th class="text-left px-5 py-3">Status</th>
               <th class="text-left px-5 py-3 hidden sm:table-cell">Coverage</th>
               <th class="text-left px-5 py-3 hidden md:table-cell">Core activities</th>
@@ -198,6 +206,9 @@ watch(() => route.query.tab, () => {
                   <span>{{ entry.startYear }}–{{ entry.endYear || 'ongoing' }}</span>
                   <span v-if="entry.budgetBand"> · {{ entry.budgetBand }}</span>
                 </div>
+              </td>
+              <td v-if="isAllOrgsView" class="px-5 py-3.5 text-xs text-gray-500 hidden sm:table-cell">
+                {{ (entry as any).organisationName || '—' }}
               </td>
               <td class="px-5 py-3.5">
                 <div class="flex items-center gap-1.5">
@@ -266,6 +277,9 @@ watch(() => route.query.tab, () => {
                 <span>{{ entry.startYear }}–{{ entry.endYear || 'ongoing' }}</span>
                 <span v-if="entry.budgetBand"> · {{ entry.budgetBand }}</span>
               </p>
+              <p v-if="isAllOrgsView && (entry as any).organisationName" class="text-xs text-gray-400 mt-1 truncate">
+                {{ (entry as any).organisationName }}
+              </p>
             </div>
             <StatusBadge v-if="entry.status === 'Verified'" label="Verified" variant="success" />
             <StatusBadge v-else :label="entry.unverifiedLabel" variant="warning" />
@@ -333,6 +347,7 @@ watch(() => route.query.tab, () => {
   />
 
   <OrganisationAllProgrammesReportModal
+    v-if="!isAllOrgsView"
     :show="showExportAllModal"
     :organisation-id="(auth.currentUser as any)?.organisation_id ?? (auth.currentUser as any)?.organisation?.id ?? null"
     :organisation-name="(auth.currentUser as any)?.organisation?.name || 'Organisation'"

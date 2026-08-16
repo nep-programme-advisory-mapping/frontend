@@ -10,7 +10,12 @@ defineProps<{
   entry: EntryDetail
   status: 'verified' | 'unverified' | null
   marking: boolean
-  isAdmin: boolean
+  // Whether the current user holds programmes.verify — not an admin-only
+  // check, since any role (built-in or admin-created) can be granted that
+  // permission. The backend's own ownership scope check on PATCH
+  // /programme-entries/{id}/verify is still the real enforcement; this only
+  // decides whether to show the button at all.
+  canVerify: boolean
 }>()
 
 defineEmits<{
@@ -42,7 +47,7 @@ const authStore = useAuthStore()
       >
         <BaseIcon name="file" :size="15" /> Generate Report
       </button>
-      <BaseButton v-if="status === 'unverified' && isAdmin" variant="secondary" class="inline-flex items-center gap-1.5" :disabled="marking" @click="$emit('mark-verified')">
+      <BaseButton v-if="status === 'unverified' && canVerify" variant="secondary" class="inline-flex items-center gap-1.5" :disabled="marking" @click="$emit('mark-verified')">
         <BaseIcon name="check" :size="15" /> {{ marking ? 'Marking…' : 'Mark as verified' }}
       </BaseButton>
       <BaseButton variant="secondary" class="inline-flex items-center gap-1.5" @click="$emit('back')">

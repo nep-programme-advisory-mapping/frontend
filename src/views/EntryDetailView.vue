@@ -58,7 +58,7 @@ function handleBack() {
         :entry
         :status
         :marking
-        :is-admin="auth.isAdmin"
+        :can-verify="auth.hasPermission('programmes.verify')"
         @mark-verified="markVerified"
         @open-report="showReportModal = true"
         @back="handleBack"

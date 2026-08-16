@@ -39,7 +39,7 @@ const ALL_STAFF_NAV: { section: string; items: NavItem[] }[] = [
   {
     section: 'WORKSPACE',
     items: [
-      { to: '/admin/dashboard', label: 'Overview', icon: 'home', permission: 'dashboard.view' },
+      { to: '/admin/dashboard', label: 'Dashboard', icon: 'dashboard', permission: 'dashboard.view' },
       { to: '/map', label: 'The Map', icon: 'map', permission: 'reports.view' },
       { to: '/adviser', label: 'The Adviser', icon: 'bolt', permission: 'advisory.view-all' },
       { to: '/admin/programmes', label: 'Programme entries', icon: 'file', permission: 'programmes.view' },
@@ -59,10 +59,16 @@ const ALL_STAFF_NAV: { section: string; items: NavItem[] }[] = [
 ]
 
 const navItems = computed<any>(() => {
-  // A user is treated as "staff" if they have at least one permission that
-  // appears in the master staff nav list — role name is never checked.
-  const staffPermissions = new Set(ALL_STAFF_NAV.flatMap(s => s.items.map(i => i.permission!)))
-  const isStaff = auth.isSuperAdmin || auth.permissions.some(p => staffPermissions.has(p))
+  // "Staff" here means "has no organisation of their own" (mirrors the
+  // backend's User::hasOrganisationWideAccess()), NOT "holds some
+  // permission that also happens to appear in the staff nav." That used to
+  // be the check, but several permissions — programmes.view chief among
+  // them — are legitimately granted to both staff AND org-bound roles like
+  // member_org (just scoped differently server-side), so a member_org user
+  // holding programmes.view was incorrectly shown the whole staff sidebar,
+  // including a "Programme entries" link into the staff-only, cross-
+  // organisation /admin/programmes view.
+  const isStaff = auth.hasOrganisationWideAccess
 
   if (!isStaff) {
     // Member nav — filtered by their actual permissions
