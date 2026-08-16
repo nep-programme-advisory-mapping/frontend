@@ -2,9 +2,11 @@ import api from './axios'
 
 export const authApi = {
   getCsrfCookie() {
-    // Sanctum CSRF cookie is served at the host root (not under /api)
+    // Sanctum CSRF cookie is served at the host root (not under /api).
+    // Strip a trailing /api with or without a trailing slash, since env-configured
+    // base URLs (e.g. VITE_API_BASE_URL set on the hosting platform) may include one.
     const baseURL = api.defaults.baseURL || ''
-    const csrfURL = baseURL.replace(/\/api$/, '') + '/sanctum/csrf-cookie'
+    const csrfURL = baseURL.replace(/\/api\/?$/, '') + '/sanctum/csrf-cookie'
     return api.get(csrfURL, { baseURL: '' })
   },
   login(credentials: { email: string; password: string }) {

@@ -12,4 +12,7 @@
  * .env.example and works for any deployment where the frontend is served
  * from — or proxied to — the same origin as the API.
  */
-export const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || '/api'
+// Trailing slash stripped so consumers can safely do `${API_BASE_URL}/some/path`
+// without risking a double slash (e.g. a hosting-platform env var set to
+// "https://host/api/" instead of "https://host/api" would otherwise 404).
+export const API_BASE_URL = (import.meta.env.VITE_API_BASE_URL || '/api').replace(/\/+$/, '')
