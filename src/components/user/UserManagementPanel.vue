@@ -66,8 +66,17 @@ onMounted(() => {
         v-model="usersComposable.searchQuery"
         type="text"
         placeholder="Search by name or email…"
-        class="w-full border border-[var(--line)] rounded-xl py-2.5 pl-9.5 pr-3.5 text-xs text-[var(--ink-900)] bg-[var(--card)] transition-all duration-150 focus:outline-none focus:border-[var(--teal-600)] focus:ring-3 focus:ring-[var(--teal-100)] placeholder:text-[var(--ink-300)]"
+        class="w-full border border-[var(--line)] rounded-xl py-2.5 pl-9.5 pr-8 text-xs text-[var(--ink-900)] bg-[var(--card)] transition-all duration-150 focus:outline-none focus:border-[var(--teal-600)] focus:ring-3 focus:ring-[var(--teal-100)] placeholder:text-[var(--ink-300)]"
       />
+      <button
+        v-if="usersComposable.searchQuery"
+        type="button"
+        @click="usersComposable.searchQuery = ''"
+        class="absolute right-2.5 top-1/2 -translate-y-1/2 text-[var(--ink-400)] hover:text-[var(--ink-700)] cursor-pointer p-1"
+        aria-label="Clear search"
+      >
+        <BaseIcon name="x" :size="12" />
+      </button>
     </div>
 
     <div class="flex gap-2.5 flex-wrap w-full md:w-auto">
@@ -94,7 +103,7 @@ onMounted(() => {
   <!-- ── User List Table ── -->
   <div class="flex flex-col gap-0">
     <UserTable
-      :users="usersComposable.users"
+      :users="usersComposable.filteredUsers"
       :is-loading="usersComposable.isLoading"
       @view="store.openViewModal"
       @edit="store.openEditModal"

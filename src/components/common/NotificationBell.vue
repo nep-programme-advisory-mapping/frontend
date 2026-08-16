@@ -2,6 +2,10 @@
 import BaseIcon from '@/components/common/BaseIcon.vue'
 import { useNotificationBell } from '@/composables/useNotificationBell'
 
+defineProps<{
+  dark?: boolean
+}>()
+
 const {
   store,
   open,
@@ -16,7 +20,10 @@ const {
   <!-- Bell button + dropdown -->
   <div ref="bellRef" class="relative">
     <button
-      class="relative p-2 rounded-lg text-gray-500 hover:text-gray-700 hover:bg-gray-100 transition-colors"
+      class="relative p-2 rounded-lg transition-colors cursor-pointer"
+      :class="dark
+        ? 'text-white/80 hover:text-white hover:bg-white/10'
+        : 'text-gray-500 hover:text-gray-700 hover:bg-gray-100'"
       @click="open = !open"
       aria-label="Notifications"
     >
@@ -33,7 +40,7 @@ const {
 
     <div
       v-if="open"
-      class="absolute right-0 mt-2 w-80 bg-white rounded-xl shadow-lg border border-gray-100 z-50 overflow-hidden"
+      class="absolute right-0 mt-2 w-[calc(100vw-2rem)] max-w-[320px] sm:w-80 bg-white rounded-xl shadow-lg border border-gray-100 z-50 overflow-hidden"
     >
       <div class="flex items-center justify-between px-4 py-3 border-b border-gray-100">
         <span class="text-sm font-semibold text-gray-800">Notifications</span>

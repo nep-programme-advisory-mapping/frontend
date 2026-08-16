@@ -57,11 +57,11 @@ async function confirmDeleteRole() {
 }
 
 function canDeleteRole(role: Role): boolean {
-  return !role.is_system && (role.users_count ?? 0) === 0
+  return role.name !== 'nep_admin' && (role.users_count ?? 0) === 0
 }
 
 function deleteBlockedReason(role: Role): string {
-  if (role.is_system) return 'Built-in system roles cannot be deleted.'
+  if (role.name === 'nep_admin') return 'The NEP Administrator role cannot be deleted.'
   if ((role.users_count ?? 0) > 0) return `Reassign the ${role.users_count} user(s) on this role before deleting it.`
   return ''
 }
@@ -198,78 +198,89 @@ function cancelExpandedRole() {
       <div
         v-for="role in store.roles"
         :key="role.id"
-        class="rounded-2xl bg-[var(--card)] border transition-all duration-200"
+        class="rounded-2xl bg-[var(--card)] border transition-all duration-200 overflow-hidden"
         :class="isExpanded(role.id) ? 'border-[var(--teal-600)] shadow-[0_0_0_3px_var(--teal-100)]' : 'border-[var(--line)] shadow-sm hover:shadow-md'"
       >
         <!-- Card header -->
-        <div class="flex items-center gap-3.5 px-5 py-4">
-          <span
-            class="w-10 h-10 rounded-xl flex items-center justify-center shrink-0 transition-transform duration-150"
-            :class="roleMeta(role).tile"
-          >
-            <BaseIcon :name="roleMeta(role).icon" :size="17" />
-          </span>
-          <div class="flex-1 min-w-0">
-            <div class="flex flex-wrap items-center gap-2">
-              <h3 class="text-sm font-bold text-[var(--ink-900)]">{{ role.display_name || role.name }}</h3>
-              <span
-                v-if="role.is_system"
-                class="rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-slate-600"
-              >
-                System
-              </span>
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 px-4 sm:px-5 py-4">
+          <!-- Role branding & info -->
+          <div class="flex items-center gap-3.5 min-w-0 flex-1">
+            <span
+              class="w-10 h-10 rounded-xl flex items-center justify-center shrink-0 transition-transform duration-150"
+              :class="roleMeta(role).tile"
+            >
+              <BaseIcon :name="roleMeta(role).icon" :size="17" />
+            </span>
+            <div class="min-w-0 flex-1">
+              <div class="flex flex-wrap items-center gap-2">
+                <h3 class="text-sm font-bold text-[var(--ink-900)] leading-tight">{{ role.display_name || role.name }}</h3>
+                <span
+                  v-if="role.is_system"
+                  class="rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-slate-600"
+                >
+                  System
+                </span>
+              </div>
+              <p class="text-xs text-[var(--ink-400)] mt-0.5 truncate">{{ role.description || role.name }}</p>
             </div>
-            <p class="text-xs text-[var(--ink-400)] mt-0.5 truncate">{{ role.description || role.name }}</p>
           </div>
-          <div class="flex items-center gap-2 shrink-0">
+
+          <!-- Role stats & action buttons -->
+          <div class="flex items-center justify-between sm:justify-end gap-2 shrink-0 pt-2.5 sm:pt-0 border-t sm:border-t-0 border-[var(--line-soft)]">
             <span class="hidden sm:inline text-[11px] font-medium text-[var(--ink-400)] whitespace-nowrap mr-1">
               {{ rolePermissionIds(role).length }} abilities · {{ role.users_count ?? 0 }} users
             </span>
-            <button
-              v-if="hasPermission('roles.update')"
-              type="button"
-              class="w-8 h-8 rounded-lg border border-[var(--line)] bg-white inline-flex items-center justify-center text-[var(--ink-500)] cursor-pointer transition-all duration-150 hover:border-[var(--teal-600)] hover:text-[var(--teal-700)] hover:bg-[var(--teal-50)]"
-              title="Edit role details"
-              @click="openEditRole(role)"
-            >
-              <BaseIcon name="edit" :size="14" />
-            </button>
-            <button
-              v-if="hasPermission('roles.delete')"
-              type="button"
-              class="w-8 h-8 rounded-lg border border-[var(--line)] bg-white inline-flex items-center justify-center cursor-pointer transition-all duration-150 disabled:opacity-40 disabled:cursor-not-allowed"
-              :class="canDeleteRole(role) ? 'text-[var(--ink-500)] hover:border-red-600 hover:text-red-600 hover:bg-red-50' : 'text-[var(--ink-300)]'"
-              :disabled="!canDeleteRole(role)"
-              :title="canDeleteRole(role) ? 'Delete role' : deleteBlockedReason(role)"
-              @click="canDeleteRole(role) && requestDeleteRole(role)"
-            >
-              <BaseIcon name="trash" :size="14" />
-            </button>
-            <button
-              v-if="hasPermission('roles.update')"
-              type="button"
-              class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border text-[11.5px] font-bold transition-all duration-150 cursor-pointer active:scale-[0.97]"
-              :class="
-                isExpanded(role.id)
-                  ? 'border-[var(--teal-600)] bg-[var(--teal-50)] text-[var(--teal-700)]'
-                  : 'border-[var(--line)] bg-white text-[var(--ink-600)] hover:border-[var(--teal-500)] hover:text-[var(--teal-700)]'
-              "
-              @click="toggleExpand(role)"
-            >
-              {{ isExpanded(role.id) ? 'Close' : 'Edit permissions' }}
-              <BaseIcon
-                name="chevronDown"
-                :size="12"
-                class="transition-transform duration-200"
-                :class="isExpanded(role.id) ? 'rotate-180' : ''"
-              />
-            </button>
+            <!-- On mobile show compact stats -->
+            <span class="sm:hidden text-[11px] font-medium text-[var(--ink-400)] whitespace-nowrap">
+              {{ rolePermissionIds(role).length }} / {{ role.users_count ?? 0 }}
+            </span>
+            <div class="flex items-center gap-1.5 shrink-0">
+              <button
+                v-if="hasPermission('roles.update')"
+                type="button"
+                class="w-8 h-8 rounded-lg border border-[var(--line)] bg-white inline-flex items-center justify-center text-[var(--ink-500)] cursor-pointer transition-all duration-150 hover:border-[var(--teal-600)] hover:text-[var(--teal-700)] hover:bg-[var(--teal-50)]"
+                title="Edit role details"
+                @click="openEditRole(role)"
+              >
+                <BaseIcon name="edit" :size="14" />
+              </button>
+              <button
+                v-if="hasPermission('roles.delete')"
+                type="button"
+                class="w-8 h-8 rounded-lg border border-[var(--line)] bg-white inline-flex items-center justify-center cursor-pointer transition-all duration-150 disabled:opacity-40 disabled:cursor-not-allowed"
+                :class="canDeleteRole(role) ? 'text-[var(--ink-500)] hover:border-red-600 hover:text-red-600 hover:bg-red-50' : 'text-[var(--ink-300)]'"
+                :disabled="!canDeleteRole(role)"
+                :title="canDeleteRole(role) ? 'Delete role' : deleteBlockedReason(role)"
+                @click="canDeleteRole(role) && requestDeleteRole(role)"
+              >
+                <BaseIcon name="trash" :size="14" />
+              </button>
+              <button
+                v-if="hasPermission('roles.update')"
+                type="button"
+                class="whitespace-nowrap inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border text-[11.5px] font-bold transition-all duration-150 cursor-pointer active:scale-[0.97]"
+                :class="
+                  isExpanded(role.id)
+                    ? 'border-[var(--teal-600)] bg-[var(--teal-50)] text-[var(--teal-700)]'
+                    : 'border-[var(--line)] bg-white text-[var(--ink-600)] hover:border-[var(--teal-500)] hover:text-[var(--teal-700)]'
+                "
+                @click="toggleExpand(role)"
+              >
+                {{ isExpanded(role.id) ? 'Close' : 'Edit permissions' }}
+                <BaseIcon
+                  name="chevronDown"
+                  :size="12"
+                  class="transition-transform duration-200"
+                  :class="isExpanded(role.id) ? 'rotate-180' : ''"
+                />
+              </button>
+            </div>
           </div>
         </div>
 
         <!-- Permission editor (expanded) -->
         <Transition name="expand">
-          <div v-if="isExpanded(role.id)" class="border-t border-[var(--line-soft)] bg-[var(--bg)] px-5 py-4">
+          <div v-if="isExpanded(role.id)" class="border-t border-[var(--line-soft)] bg-[var(--bg)] px-4 sm:px-5 pt-4 pb-5">
             <!-- Editor header: count + progress + select all -->
             <div class="flex items-center justify-between gap-3 mb-2.5">
               <div class="flex items-center gap-2.5 flex-1 min-w-0">
@@ -363,7 +374,7 @@ function cancelExpandedRole() {
             </p>
 
             <!-- Editor footer -->
-            <div class="flex justify-end gap-2.5 mt-3.5 pt-3.5 border-t border-[var(--line-soft)]">
+            <div class="flex justify-end gap-2.5 mt-4 pt-3.5 border-t border-[var(--line-soft)]">
               <button type="button" class="btn btn-secondary" :disabled="store.savingRoleId !== null" @click="cancelExpandedRole">
                 Cancel
               </button>

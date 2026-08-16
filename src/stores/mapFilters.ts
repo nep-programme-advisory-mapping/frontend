@@ -92,11 +92,19 @@ export function useMapFilterOptions(mapEntries: Ref<any[]>, filters: Ref<MapView
 
   function toApiFilters(): MapFilters {
     const f = filters.value
-    const params: MapFilters = {}
+    const params: any = {}
 
     if (hasActiveFilters.value) {
       const ids = filtered.value.map((e: any) => e.id).filter(Boolean)
-      if (ids.length) params.entry_ids = ids.join(',')
+      if (ids.length) {
+        params.entry_ids = ids.join(',')
+        params.ids = ids.join(',')
+        params['entry_ids[]'] = ids
+        params['ids[]'] = ids
+      } else {
+        params.entry_ids = '0'
+        params.ids = '0'
+      }
     }
 
     if (f.province) {
@@ -124,11 +132,18 @@ export function useMapFilterOptions(mapEntries: Ref<any[]>, filters: Ref<MapView
       if (catMatch) params.category_id = catMatch.id
     }
     if (f.level) params.education_level_id = Number(f.level)
-    if (f.inclusion) params.inclusion_group = f.inclusion
-    if (f.keyword) params.keyword = f.keyword
+    if (f.inclusion) {
+      params.inclusion_group = f.inclusion
+      params.inclusion_type = f.inclusion
+    }
+    if (f.keyword) {
+      params.keyword = f.keyword
+      params.search = f.keyword
+      params.q = f.keyword
+    }
     if (f.counterpart) params.agreement_counterpart_type = f.counterpart
 
-    return params
+    return params as MapFilters
   }
 
   return { provincesList, districtsList, communesList, villagesList, counterpartOptions, provinceIdByName, toApiFilters }
