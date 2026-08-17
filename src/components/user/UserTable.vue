@@ -3,6 +3,7 @@ import BaseIcon from '@/components/common/BaseIcon.vue'
 import UserStatusBadge from './UserStatusBadge.vue'
 import EmptyState from '@/components/shared/EmptyState.vue'
 import { usePermission } from '@/composables/usePermission'
+import { useAuth } from '@/composables/useAuth'
 import type { User } from '@/types/user'
 
 defineProps<{
@@ -20,6 +21,15 @@ const emit = defineEmits<{
 }>()
 
 const { hasPermission } = usePermission()
+const { currentUserId } = useAuth()
+
+// The backend already rejects this (UserManagementController::destroy():
+// "You cannot delete your own account.") for any role, not just admin —
+// this just disables the icon up front instead of letting the request
+// round-trip into an error toast.
+function isSelf(user: User): boolean {
+  return currentUserId.value != null && String(user.id) === currentUserId.value
+}
 
 /** Human-readable role labels */
 const ROLE_LABELS: Record<string, string> = {
@@ -186,9 +196,13 @@ function formatDate(iso: string): string {
                 </button>
                 <button
                   v-if="hasPermission('users.delete')"
-                  class="w-[34px] h-[34px] rounded-lg border border-[var(--line)] bg-white inline-flex items-center justify-center text-[var(--ink-500)] cursor-pointer transition-all duration-150 hover:border-red-600 hover:text-red-600 hover:bg-red-50 hover:shadow-[0_1px_4px_rgba(220,38,38,0.1)]"
-                  title="Delete account"
-                  @click="emit('remove', user)"
+                  class="w-[34px] h-[34px] rounded-lg border border-[var(--line)] bg-white inline-flex items-center justify-center transition-all duration-150"
+                  :class="isSelf(user)
+                    ? 'text-[var(--ink-300)] cursor-not-allowed opacity-50'
+                    : 'text-[var(--ink-500)] cursor-pointer hover:border-red-600 hover:text-red-600 hover:bg-red-50 hover:shadow-[0_1px_4px_rgba(220,38,38,0.1)]'"
+                  :disabled="isSelf(user)"
+                  :title="isSelf(user) ? 'You cannot delete your own account' : 'Delete account'"
+                  @click="!isSelf(user) && emit('remove', user)"
                 >
                   <BaseIcon name="trash" :size="14" />
                 </button>
@@ -246,8 +260,11 @@ function formatDate(iso: string): string {
             </button>
             <button
               v-if="hasPermission('users.delete')"
-              class="btn btn-danger-ghost btn-sm"
-              @click="emit('remove', user)"
+              class="btn btn-sm"
+              :class="isSelf(user) ? 'btn-secondary opacity-50 cursor-not-allowed' : 'btn-danger-ghost'"
+              :disabled="isSelf(user)"
+              :title="isSelf(user) ? 'You cannot delete your own account' : undefined"
+              @click="!isSelf(user) && emit('remove', user)"
             >
               <BaseIcon name="trash" :size="13" /> Delete
             </button>

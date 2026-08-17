@@ -41,6 +41,16 @@ export async function ensureTaxonomyMaps() {
   })
 }
 
+// Same reasoning as programmeForm.ts's scrollToTop(): a blocked save sets
+// inline per-field errors (via `errors` below) that a scrolled-down user
+// may never see, even though the toast fired. Scroll back to top whenever
+// an explicit (non-autosave) save fails so the error is actually visible.
+function scrollToTop() {
+  if (typeof window !== 'undefined') {
+    window.scrollTo({ top: 0, behavior: 'smooth' })
+  }
+}
+
 function formatUserFriendlyError(rawMsg: string): string {
   if (!rawMsg) return 'Please review your selections and try saving again.'
   const lower = rawMsg.toLowerCase()
@@ -382,6 +392,7 @@ export const useProgrammeSaveStore = defineStore('programmeSave', () => {
       } else {
         toast.error(formatUserFriendlyError(serverMessage || 'An unexpected error occurred while saving.'))
       }
+      scrollToTop()
       return false
     } finally {
       isSaving.value = false

@@ -329,6 +329,18 @@ export const useProgrammeFormStore = defineStore('programmeForm', () => {
     return true
   }
 
+  // A blocked "Continue" only sets inline field errors near the top of the
+  // current step's form — no toast, nothing that stays visible regardless
+  // of scroll position. A user who scrolled down to reach the button (a
+  // long step, or a small screen) then sees no visible reaction at all and
+  // has no way to tell why nothing happened. Scrolling back to the top on
+  // every validation failure — inline or toast — puts the error back in view.
+  function scrollToTop() {
+    if (typeof window !== 'undefined') {
+      window.scrollTo({ top: 0, behavior: 'smooth' })
+    }
+  }
+
   // --- Navigation ---
   function goBack() {
     syncRefsToStore()
@@ -338,11 +350,11 @@ export const useProgrammeFormStore = defineStore('programmeForm', () => {
   function goToStep(stepNumber: number) {
     if (stepNumber > 1) {
       const valid = identityFormRef.value ? identityFormRef.value.validate() : identityStore.validate()
-      if (!valid) { currentStep.value = 1; return false }
+      if (!valid) { currentStep.value = 1; scrollToTop(); return false }
     }
     if (stepNumber === 5 && currentStep.value === 4) {
       const valid = agreementsFormRef.value ? agreementsFormRef.value.validate() : agreementsStore.validate()
-      if (!valid) return false
+      if (!valid) { scrollToTop(); return false }
     }
     syncRefsToStore()
     currentStep.value = stepNumber
@@ -350,7 +362,7 @@ export const useProgrammeFormStore = defineStore('programmeForm', () => {
   }
 
   async function advanceStep() {
-    if (!validateCurrentStep()) return
+    if (!validateCurrentStep()) { scrollToTop(); return }
     syncRefsToStore()
     sessionStorage.setItem('new_programme_entry_draft', JSON.stringify({
       currentStep: currentStep.value + 1,
@@ -376,15 +388,18 @@ export const useProgrammeFormStore = defineStore('programmeForm', () => {
       const missing = [1, 2, 3, 5].filter(s => !completedSteps.value.has(s))
       if (missing.length > 0) {
         toast.error("Please complete steps 1, 2, 3, and 5 to submit. If you're not ready, you can save your draft and exit by clicking 'Save & exit' in the top right corner.")
+        scrollToTop()
         return false
       }
       if (keywordsError.value) {
         toast.error('Please remove duplicate keywords before saving.')
+        scrollToTop()
         return false
       }
     } else {
       if (!section1Data.value.name?.trim() || !section1Data.value.startYear) {
         toast.error('Please complete Step 1 (Programme name and Start year) before saving.')
+        scrollToTop()
         return false
       }
     }
